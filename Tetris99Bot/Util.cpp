@@ -11,8 +11,7 @@ Util::~Util()
 {
 }
 using namespace cv;
-
- static Rect rects[20][10]  ;
+ cv::Rect Util::pieceRects[20][10];
 
  const Block Util::gray = Block(imread(Const::PIECE_PATH + "Gray.png"), "Dkblue", 7);
 
@@ -34,7 +33,7 @@ void Util::init() {
 
 			int rowStart = (unit * y);
 			int colStart = ((19 - x) * unit);
-			rects[x][y] =  Rect(rowStart, colStart, unit, unit);
+			pieceRects[x][y] =  Rect(rowStart, colStart, unit, unit);
 		}
 	}
 }
@@ -137,13 +136,13 @@ static Piece * pieces[] = {  new PieceO(), new PieceI(), new PieceS(), new Piece
 	 }
 	 return false;
  }
-   void Util::getFilled(long * rows, Mat mat, bool onlyUseGray) {
 
+   void Util::getFilled(long * rows, Mat mat, bool onlyUseGray) {
 	if (onlyUseGray) {
 		for (int x = 0; x < 20; x++) {
 			rows[x] = 0;
 			for (int y = 0; y < 10; y++) {
-				Mat subMat = Mat(mat,rects[x][y]);
+				Mat subMat = Mat(mat, pieceRects[x][y]);
 				if (similarity(subMat, gray) > 40)
 					rows[x] |= 1 << y;
 			}
@@ -153,9 +152,10 @@ static Piece * pieces[] = {  new PieceO(), new PieceI(), new PieceS(), new Piece
 		for (int x = 0; x < 20; x++) {
 			rows[x] = 0;
 			for (int y = 0; y < 10; y++) {
-				Mat subMat = Mat(mat,rects[x][y]);
-				if (Util::isIncludeMat(subMat))
-					rows[x] |= 1 << y;
+				Mat subMat = Mat(mat, pieceRects[x][y]);
+				if (Util::isIncludeMat(subMat)) {
+				rows[x] |= 1 << y;
+				}
 			}
 		}
 	}

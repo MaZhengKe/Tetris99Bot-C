@@ -25,9 +25,6 @@ extern "C"
 #define SFM_REFRESH_EVENT  (SDL_USEREVENT + 1)
 #define SFM_BREAK_EVENT  (SDL_USEREVENT + 2)
 
-
-#define SDL_EVENT_INTERFACE_FRESH (SDL_USEREVENT +1)
-#define SDL_EVENT_QUIT (SDL_USEREVENT +2)
 class FrameTrack {
 
 public:

@@ -26,7 +26,7 @@ public:
 	Util();
 	~Util();
 	static void init();
-
+	static cv::Rect pieceRects[20][10];
 	static Piece* bigMat2Piece();
 	static Piece* bigMat2Piece(cv::Mat mat);
 	static Piece* mat2Piece(cv::Mat mat);

@@ -39,7 +39,6 @@ PieceShape**  PieceI::shapes() {
 			new PieceShape(4,1,3, 0,  new Point[4]{Point(0, 0),  Point(0, 1),  Point(0, 2),  Point(0, 3)}),
 			new PieceShape(1,4,4, 1,   new Point[4]{Point(0, 0),  Point(1, 0),  Point(2, 0),  Point(3, 0)})
 	};
-	cout << " a" << endl;
 	return a;
 }
 

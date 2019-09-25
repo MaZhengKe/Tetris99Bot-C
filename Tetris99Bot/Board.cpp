@@ -4,6 +4,8 @@ int Board::s[] = { 0, -800, -800, -500, 6200 };
 long Board::EMPTY_ROW = 0;
 long Board::FULL_ROW = 0x3FF;
 Board::Board() {}
+
+ bool Board::cleand = false;
 inline Board::Board(long rows[20], Piece* next[6], Piece* hold, Piece *currentPiece) {
 	memcpy(this->rows, rows, 20 * sizeof(long));
 	memcpy(this->next, next, 6 * sizeof(Piece*));
@@ -43,7 +45,6 @@ inline void Board::fill(int x, int y) {
 	setBits(x, 1 << y);
 }
 
-
 inline int Board::fill(int y, PieceShape* shape) {
 	int x = minX(y, shape);
 	if (x == 20) {
@@ -52,6 +53,7 @@ inline int Board::fill(int y, PieceShape* shape) {
 	bool isCreateHole = fill(x, y, shape);
 
 	int clean = clearRows(x, shape->h);
+	cleand = clean > 0;
 	if (isCreateHole && clean == 0) {
 		return -99999;
 	}
@@ -78,7 +80,6 @@ inline  bool Board::fill(int x, int y, PieceShape* shape) {
 			isCreateHole = true;
 	}
 	return isCreateHole;
-
 }
 
 inline int Board::minX(int y, PieceShape* shape) {
@@ -218,7 +219,7 @@ Value Board::value(int avgV) {
 
 	bool free9 = true;
 	for (int x = 0; x < 20; x++) {
-		if (isFilled(x, 9)) {
+		if (isFilled(x, 0)) {
 			free9 = false;
 		}
 	}
@@ -268,7 +269,7 @@ void Board::paintAll(Move move) {
 				p[x] += ("█");
 			}
 			else if (contain(list, x, y)) {
-				p[x] += ("▒▒");
+				p[x] += ("▓");
 			}
 			else {
 				p[x] += ("  ");
@@ -298,7 +299,7 @@ void Board::paintAll(Move move) {
 					p[x] += ("█");
 				}
 				else if (contain(list, x, y)) {
-					p[x] += ("▒▒");
+					p[x] += ("▓");
 				}
 				else {
 					p[x] += ("  ");
@@ -311,7 +312,7 @@ void Board::paintAll(Move move) {
 	for (int x = 19; x >= 0; x--) {
 		std::cout << p[x] << endl;
 	}
-	std::cout << "--------------------------------------------------------------------------------------------------------------" << endl;
+	std::cout << "---------------------------------------------------------------------------------------------------------------------------------" << endl;
 
 }
 
@@ -453,12 +454,13 @@ inline void Board::getPieceMoves(set<Move> *moves, Piece* piece, bool isUseHold)
 	}
 }
 
-inline void Board::useMove(Move move) {
+inline bool Board::useMove(Move move) {
 	if (move.m.isUseHold)
 		hold = currentPiece;
 	currentPiece = next[0];
 	refreshNext();
 	fill(move);
+	return cleand;
 }
 
 inline void Board::refreshNext() {

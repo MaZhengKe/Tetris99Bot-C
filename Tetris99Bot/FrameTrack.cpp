@@ -14,23 +14,29 @@ mutex m;
 condition_variable cva;
 bool nextChanged;
 bool fillChanged;
+string int2str(int i) {
+	string s;
+	stringstream ss(s);
+	ss << i;
 
+	return ss.str();
+
+}
 void FrameTrack::getFilled(long * rows, bool isOnlyUseGray) {
 	if (!fillChanged) {
 		unique_lock<mutex> lock(m);
 		cva.wait(lock);
 	}
 	m.lock();
-	std::cout << clock() << " fill get start" << endl;
+	//std::cout << clock() << " fill get start" << endl;
 	Mat img(this->mat, boardRect);
 	Mat mat = Util::toHSV(img);
-	std::cout << clock() << " hsv tran end" << endl;
+	//std::cout << clock() << " hsv tran end" << endl;
 	Util::getFilled(rows, mat, isOnlyUseGray);
 	filledChanged = false;
-	std::cout << clock() << " fill get end" << endl;
+	//std::cout << clock() << " fill get end" << endl;
 	m.unlock();
 }
-
 void FrameTrack::getNextPieces(Piece** nextPieces) {
 	if (!nextChanged) {
 		unique_lock<mutex> lock(m);
@@ -132,7 +138,6 @@ int FrameTrack::startR()
 		FrameTrack::smallNextPieces[i] = Rect(1224, 216 + i * (44 + 38), 88, 44);
 	}
 
-
 	pFormatCtx = avformat_alloc_context();
 	//pFormatCtx->probesize = 10000 * 1024;
 	//pFormatCtx->duration = 100 * AV_TIME_BASE;
@@ -140,9 +145,9 @@ int FrameTrack::startR()
 	// 打开本地摄像头
 	OpenLocalCamera(pFormatCtx);
 
-	printf("---------------- File Information ---------------\n");
+	//printf("---------------- File Information ---------------\n");
 	av_dump_format(pFormatCtx, 0, NULL, 0);
-	printf("-------------------------------------------------\n");
+	//printf("-------------------------------------------------\n");
 
 	// 寻找视频流信息
 	if (avformat_find_stream_info(pFormatCtx, NULL) < 0)
@@ -256,7 +261,7 @@ int FrameTrack::startR()
 	{
 		//Wait
 		SDL_WaitEvent(&event);
-		if (event.type == SDL_EVENT_INTERFACE_FRESH)
+		if (event.type == SFM_REFRESH_EVENT)
 		{
 			//------------------------------
 			if (av_read_frame(pFormatCtx, packet) >= 0)
@@ -301,7 +306,7 @@ int FrameTrack::startR()
 		{
 			thread_exit = 1;
 		}
-		else if (event.type == SDL_EVENT_QUIT)
+		else if (event.type == SFM_BREAK_EVENT)
 		{
 			break;
 		}

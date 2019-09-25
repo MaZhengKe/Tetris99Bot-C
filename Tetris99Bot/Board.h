@@ -10,6 +10,7 @@ public:
 	static long EMPTY_ROW;
 	static long FULL_ROW;
 
+	static bool cleand;
 	long rows[20];	
 	Piece* next[6];
 	Piece* hold;
@@ -38,7 +39,8 @@ public:
 	void backgetMoves(set<Move>* moves);
 	void backgetPieceMoves(set<Move>* moves, Piece * piece, bool isUseHold);
 	void getPieceMoves(set<Move>* moves, Piece* piece, bool isUseHold = false);
-	void useMove(Move move);
+	bool useMove(Move move);
 	void refreshNext();
 	void fill(Move move);
 };
+
