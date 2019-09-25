@@ -165,7 +165,6 @@ int createProController(void *opaque)
 
 CComm cComm;
 
-long endtime = 0;
 void exec(Move move) {
 
 	int rs[15];
@@ -221,7 +220,6 @@ void exec(Move move) {
 		bbb = dpad_N;
 		Sleep(28);
 	}
-	endtime = clock();
 	cout << clock() <<" end "<< endl;
 	//cout << endl;
 }
@@ -290,15 +288,18 @@ void run() {
 	nextBoard.refreshNext();
 
 	seconds = time(NULL);
-	endtime = clock() + 7000;
+
 	while (true) {
 
 		frameTracker.getNextPieces(board.next);
 		cout << clock() << " ";
 		bool haveNull = false;
+
+
 		for (int i = 0; i < 6; i++) {
 			if (board.next[i] == NULL) {
 				cout << "有空的next"<< endl;
+				haveNull = true;
 				break;
 			}
 			cout <<  string(1, board.next[i]->character());
@@ -309,33 +310,14 @@ void run() {
 			continue;
 		}
 
-		if ((Board::cleand &&clock() - endtime < 720) ||(!Board::cleand && clock() - endtime < 50))
-		{
-			cout << clock() << " 时间未到"<< endl;
-			continue;
-		}
-
-		bool isNew;
-
-		if (allEqual(nextBoard.next, board.next)) {
-			cout << clock() << " 时间已到，且还未刷新" << endl;
-			isNew = false;
-		}else if (notEqual(nextBoard.next, board.next)) {
+		 if (notEqual(nextBoard.next, board.next)) {
 			if (time(NULL) - seconds > 60)
 				return;
 			seconds = time(NULL);
 			continue;
 		}
-		else
-		{
-			cout << clock() << " 时间已到，且已刷新" << endl;
-			isNew = true;
-		}
-
-		if (isNew) {
 
 		std::cout << clock() << " next changed" << endl;
-		std::cout << clock() - endtime << " 从上次按下d" << endl;
 
 		frameTracker.getFilled(board.rows);
 		std::cout << clock() << " 一次rows获取完成" << endl;
@@ -364,31 +346,7 @@ void run() {
 		nextBoard = board;
 		board = tmp;
 		//std::cout << clock() << " 一次周期结束" << endl;
-		}
-		else
-		{
-			std::cout << clock() << " 预判" << endl;
-			std::cout << clock() - endtime << " 从上次按下d" << endl;
-			nextBoard.next[4] = board.next[5];
-
-			nextBoard.paint();
-			//std::cout << clock() << " 图像获取完成" << endl;
-			Move* move = nextBoard.get(5);
-			if (!move) {
-				move = nextBoard.backGet();
-			}
-			nextBoard.paintAll(*move);
-
-			std::cout << move->m.piece->character() << " "
-				<< move->m.rotateIndex << " " << move->m.y << endl;
-			std::cout << clock() << " 结果计算完成" << endl;
-			exec(*move);
-			std::cout << clock() << " 结果执行完成" << endl;
-
-			nextBoard.useMove(*move);
-			std::cout << clock() << " 一次周期结束,nextBoard:" << endl;
-			nextBoard.paint();
-		}
+		
 	}
 }
 int main(int argc, char* argv[]) {

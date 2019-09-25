@@ -39,7 +39,7 @@ void Util::init() {
 }
 
 static Piece * pieces[] = {  new PieceO(), new PieceI(), new PieceS(), new PieceZ(), new PieceL(), new PieceJ(), new PieceT() };
- float matSim(Mat mat, Mat subMat, int h, int w) {
+ int matSim(Mat mat, Mat subMat, int h, int w) {
 	int match = 0;
 
 	for (int x = 0; x < w; x++) {
@@ -51,20 +51,16 @@ static Piece * pieces[] = {  new PieceO(), new PieceI(), new PieceS(), new Piece
 			}
 		}
 	}
-	return (float)match / h / w;
+	return match;
 }
 
- Piece * Util::bigMat2Piece()
- {
-	 return nullptr;
- }
 
  Piece* Util::bigMat2Piece(Mat mat) {
 	Piece * candidate = NULL ;
-	double max = 0.95;
+	int max = 300;
 	//BufferedImage bufferedImage = toBufferedImage(mat);
 	for (Piece * piece : pieces) {
-		double similarity = matSim(mat, piece->getBigMat(), 13, 26);
+		int similarity = matSim(mat, piece->getBigMat(), 13, 26);
 		//log.info("{} {}",piece,similarity);
 		if (similarity > max) {
 			max = similarity;
@@ -76,10 +72,10 @@ static Piece * pieces[] = {  new PieceO(), new PieceI(), new PieceS(), new Piece
 
  Piece* Util::mat2Piece(Mat mat) {
 	 Piece *candidate = NULL;
-	 double max = 0.95;
+	 int max = 200;
 	 for (Piece *piece : pieces) {
 		 Mat mat1 = piece->getMat();
-		 double similarity = matSim(mat, mat1, 11, 22);
+		 int similarity = matSim(mat, mat1, 11, 22);
 		 //log.info("{} {}",piece,similarity);
 		 if (similarity > max) {
 			 max = similarity;

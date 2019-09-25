@@ -5,7 +5,6 @@ long Board::EMPTY_ROW = 0;
 long Board::FULL_ROW = 0x3FF;
 Board::Board() {}
 
- bool Board::cleand = false;
 inline Board::Board(long rows[20], Piece* next[6], Piece* hold, Piece *currentPiece) {
 	memcpy(this->rows, rows, 20 * sizeof(long));
 	memcpy(this->next, next, 6 * sizeof(Piece*));
@@ -53,7 +52,6 @@ inline int Board::fill(int y, PieceShape* shape) {
 	bool isCreateHole = fill(x, y, shape);
 
 	int clean = clearRows(x, shape->h);
-	cleand = clean > 0;
 	if (isCreateHole && clean == 0) {
 		return -99999;
 	}
@@ -454,13 +452,12 @@ inline void Board::getPieceMoves(set<Move> *moves, Piece* piece, bool isUseHold)
 	}
 }
 
-inline bool Board::useMove(Move move) {
+inline void Board::useMove(Move move) {
 	if (move.m.isUseHold)
 		hold = currentPiece;
 	currentPiece = next[0];
 	refreshNext();
 	fill(move);
-	return cleand;
 }
 
 inline void Board::refreshNext() {
