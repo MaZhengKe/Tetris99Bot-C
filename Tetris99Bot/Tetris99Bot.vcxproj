@@ -23,6 +23,7 @@
     <ProjectGuid>{20E2C209-50BC-4B22-AA47-B466DA384755}</ProjectGuid>
     <RootNamespace>SDL</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <ProjectName>Tetris99Bot</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -84,7 +85,13 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\devTools\opencv\build\include\opencv2;C:\devTools\opencv\build\include;C:\devTools\SDL\include;C:\devTools\ffmpeg\dev\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>C:\devTools\opencv\build\x64\vc14\lib;C:\devTools\ffmpeg\dev\lib;C:\devTools\SDL\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;avcodec.lib;avformat.lib;avutil.lib;avdevice.lib;avfilter.lib;postproc.lib;swresample.lib;swscale.lib;opencv_world410d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Console</SubSystem>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -108,13 +115,44 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\devTools\opencv\build\include\opencv2;C:\devTools\opencv\build\include;C:\devTools\SDL\include;C:\devTools\ffmpeg\dev\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>C:\devTools\opencv\build\x64\vc14\lib;C:\devTools\ffmpeg\dev\lib;C:\devTools\SDL\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;avcodec.lib;avformat.lib;avutil.lib;avdevice.lib;avfilter.lib;postproc.lib;swresample.lib;swscale.lib;opencv_world410.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Block.cpp" />
+    <ClCompile Include="Board.cpp" />
+    <ClCompile Include="Comm.cpp" />
+    <ClCompile Include="Const.cpp" />
+    <ClCompile Include="FrameTrack.cpp" />
+    <ClCompile Include="Move.cpp" />
+    <ClCompile Include="piece.cpp" />
+    <ClCompile Include="PieceShape.cpp" />
+    <ClCompile Include="Points.cpp" />
+    <ClCompile Include="Util.cpp" />
+    <ClCompile Include="Run.cpp" />
+    <ClCompile Include="Value.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Block.h" />
+    <ClInclude Include="Board.h" />
+    <ClInclude Include="Comm.h" />
+    <ClInclude Include="Const.h" />
+    <ClInclude Include="Logger.h" />
+    <ClInclude Include="FrameTrack.h" />
+    <ClInclude Include="Move.h" />
+    <ClInclude Include="piece.h" />
+    <ClInclude Include="PieceShape.h" />
+    <ClInclude Include="Point.h" />
+    <ClInclude Include="STime.h" />
+    <ClInclude Include="Util.h" />
+    <ClInclude Include="Value.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
