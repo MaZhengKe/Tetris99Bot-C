@@ -1,6 +1,6 @@
 ﻿#include "Board.h"
 
-int Board::s[] = { 0, -800, -800, -500, 6200 };
+int Board::s[] = { 0, -800, -800, -300, 6200 };
 long Board::EMPTY_ROW = 0;
 long Board::FULL_ROW = 0x3FF;
 Board::Board() {}
@@ -130,7 +130,7 @@ inline int Board::clearRows(int x, int pieceHeight) {
 int calc_01_change_count(long n_input)
 {
 	n_input = n_input << 1;
-	n_input |= 0b100000000001;
+	n_input |= 0b100000000011;
 
 	long tmp = (n_input << 1);
 	long n = n_input ^ tmp;//check how many bits are different
@@ -147,7 +147,7 @@ int calc_01_change_count(long n_input)
 
 bool isWell(long l,int y) {
 	l = l << 1;
-	l |= 0b100000000001;
+	l |= 0b100000000011;
 
 	l=l >> y;
 	l &= 0b111;
@@ -172,16 +172,7 @@ Value Board::value(int avgV) {
 		}
 		if (!now)
 			rowTransitions++;
-	}
 
-
-	for (int x = 0; x < 20; x++) {
-		colTransitions += calc_01_change_count(rows[x]);
-	}
-
-
-
-	for (int y = 0; y < 10; y++) {
 		bool f = false;
 		int block = 0;
 		for (int x = 19; x >= 0; x--) {
@@ -197,33 +188,28 @@ Value Board::value(int avgV) {
 		}
 	}
 
-	int cnt = 0;
-	int maxCnt = 0;
 
-	for (int x = 0; x < 20; x++)
-		for (int y = 0; y < 10; y++) {
+	bool free0 = true;
+	int cnt = 0;
+	for (int x = 0; x < 20; x++) {
+		colTransitions += calc_01_change_count(rows[x]);
+
+		for (int y = 1; y < 10; y++) {
 			if (isWell(rows[x],y)) {
 				cnt++;
 			}
 			else {
 				wellSums += well[cnt];
-				if (cnt > maxCnt) {
-					maxCnt = cnt;
-				}
 				cnt = 0;
 			}
 		}
-	wellSums -= well[maxCnt];
-
-	bool free9 = true;
-	for (int x = 0; x < 20; x++) {
 		if (isFilled(x, 0)) {
-			free9 = false;
+			free0 = false;
 		}
 	}
 
 	int f = 0;
-	if (free9) {
+	if (free0) {
 		f = 500;
 	}
 
@@ -377,7 +363,7 @@ Move* Board::get(int dep) {
 	if (hold == NULL) {
 		hold = next[0];
 		refreshNext();
-		return new Move(0, 0, hold, Value(0, 0), true);
+		return new Move(9-hold->pieceShapes[0]->w, 0, hold, Value(0, 0), true);
 	}
 
 	set<Move> *moves = new set<Move>();

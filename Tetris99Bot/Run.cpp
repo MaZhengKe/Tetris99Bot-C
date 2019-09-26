@@ -197,17 +197,43 @@ void exec(Move move) {
 	}
 
 	int max = max(abs(rotate), abs(moveY));
-	for (int k = 0; k < max; k++) {
-		if (k < abs(rotate) && k < abs(moveY)) {
-			rs[i++] = (moveY > 0 ? dpad_R : dpad_L) + (rotate > 0 ? button_A : button_X);
-		}
-		else if (k < abs(rotate)) {
-			rs[i++] = dpad_N + (rotate > 0 ? button_A : button_X);
-		}
-		else {
-			rs[i++] = moveY > 0 ? dpad_R : dpad_L;
+
+	if (abs(rotate) > abs(moveY)) {
+
+		for (int k = 0; k < abs(rotate); k++) {
+			if (k < abs(rotate) - abs(moveY)) {
+				rs[i++] = dpad_N + (rotate > 0 ? button_A : button_X);
+			}
+			else
+			{
+				rs[i++] = (moveY > 0 ? dpad_R : dpad_L) + (rotate > 0 ? button_A : button_X);
+			}
 		}
 	}
+	else
+	{
+		for (int k = 0; k < abs(moveY); k++) {
+			if (k < abs(moveY) - abs(rotate)) {
+				rs[i++] = moveY > 0 ? dpad_R : dpad_L;
+			}
+			else
+			{
+				rs[i++] = (moveY > 0 ? dpad_R : dpad_L) + (rotate > 0 ? button_A : button_X);
+			}
+		}
+	}
+
+	//for (int k = 0; k < max; k++) {
+	//	if (k < abs(rotate) && k < abs(moveY)) {
+	//		rs[i++] = (moveY > 0 ? dpad_R : dpad_L) + (rotate > 0 ? button_A : button_X);
+	//	}
+	//	else if (k < abs(rotate)) {
+	//		rs[i++] = dpad_N + (rotate > 0 ? button_A : button_X);
+	//	}
+	//	else {
+	//		rs[i++] = moveY > 0 ? dpad_R : dpad_L;
+	//	}
+	//}
 	rs[i++] = 0;
 	rs[i++] = 72;
 
@@ -215,10 +241,17 @@ void exec(Move move) {
 		//cout << rs[j] << endl;
 		cComm.WriteByte(rs[j]);
 		bbb = rs[j];
-		Sleep(32);
+		int time = clock();
+
+		while (clock() - time < 30) {
+			continue;
+		}
 		cComm.WriteByte(dpad_N);
 		bbb = dpad_N;
-		Sleep(28);
+		time = clock();
+		while (clock() - time < 30) {
+			continue;
+		}
 	}
 	cout << clock() <<" end "<< endl;
 	//cout << endl;
@@ -295,6 +328,8 @@ void run() {
 		cout << clock() << " ";
 		bool haveNull = false;
 
+		if (time(NULL) - seconds > 20)
+			return;
 
 		for (int i = 0; i < 6; i++) {
 			if (board.next[i] == NULL) {
@@ -317,6 +352,8 @@ void run() {
 			continue;
 		}
 
+		 seconds = time(NULL);
+
 		std::cout << clock() << " next changed" << endl;
 
 		frameTracker.getFilled(board.rows);
@@ -328,15 +365,15 @@ void run() {
 		board.hold = nextBoard.hold;
 		board.currentPiece = nextBoard.currentPiece;
 		board.paint();
-		//std::cout << clock() << " 图像获取完成" << endl;
-		Move* move = board.get(5);
+		std::cout << clock() << " 图像获取完成" << endl;
+		Move* move = board.get(4);
 		if (!move) {
 			move = board.backGet();
 		}
 		board.paintAll(*move);
 		std::cout << move->m.piece->character() << " "
 			<< move->m.rotateIndex << " " << move->m.y << endl;
-		//std::cout << clock() << " 结果计算完成" << endl;
+		std::cout << clock() << " 结果计算完成" << endl;
 		exec(*move);
 		//std::cout << clock() << " 结果执行完成" << endl;
 
@@ -350,7 +387,7 @@ void run() {
 	}
 }
 int main(int argc, char* argv[]) {
-	av_log_set_level(AV_LOG_PANIC);
+	//av_log_set_level(AV_LOG_PANIC);
 	Util::init();
 	SDL_Thread *pro_id = SDL_CreateThread(createProController, "Pro Thread", NULL);
 	SDL_Thread *video_tid = SDL_CreateThread(aa, "Get Thread", NULL);
@@ -388,7 +425,7 @@ bool isGarbage(long row) {
 }
 int correction(long* board, long* expected, int numToRefresh) {
 
-	if (time(NULL) - seconds > 60)
+	if (time(NULL) - seconds > 20)
 		return -1;
 	if (numToRefresh < 0) {
 		frameTracker.getFilled(board);
@@ -428,10 +465,10 @@ int correction(long* board, long* expected, int numToRefresh) {
 
 	if (startX > 0) {
 		cout << "高度上升：" << startX << endl;
-		frameTracker.getFilled(board, true);
+		frameTracker.getGrayFilled(board);
 		for (int x = 0; x < startX; x++) {
 			if (!isGarbage(board[x])) {
-				frameTracker.getFilled(board, true);
+				frameTracker.getGrayFilled(board);
 				filling(board, expected, startX, height);
 				return correction(board, expected, numToRefresh - 1);
 			}

@@ -36,4 +36,5 @@ public:
 	static double similarity(cv::Mat mat, Block block);
 	static bool isIncludeMat(cv::Mat mat);
 	static void getFilled(long * rows, cv::Mat mat, bool onlyUseGray);
+	static void getFilled(long * rows, cv::Mat mat, long * grayRows);
 };

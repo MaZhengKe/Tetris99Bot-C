@@ -12,31 +12,44 @@ cv::Rect FrameTrack::bigNextPiece = cv::Rect(1222, 123, 104, 52);
 cv::Rect FrameTrack::smallNextPieces[5] = {};
 mutex m;
 condition_variable cva;
-bool nextChanged;
-bool fillChanged;
-string int2str(int i) {
-	string s;
-	stringstream ss(s);
-	ss << i;
 
-	return ss.str();
+long backRows[20];
+long backGrayRows[20];
+Piece * backNext[6];
 
-}
-void FrameTrack::getFilled(long * rows, bool isOnlyUseGray) {
-	if (!fillChanged) {
+void FrameTrack::getFilled(long * rows) {
+	if (!filledChanged) {
 		unique_lock<mutex> lock(m);
 		cva.wait(lock);
 	}
 	m.lock();
 	//std::cout << clock() << " fill get start" << endl;
-	Mat img(this->mat, boardRect);
-	Mat mat = Util::toHSV(img);
-	//std::cout << clock() << " hsv tran end" << endl;
-	Util::getFilled(rows, mat, isOnlyUseGray);
+	memcpy(rows, backRows, 20 * sizeof(long));
 	filledChanged = false;
 	//std::cout << clock() << " fill get end" << endl;
 	m.unlock();
 }
+void FrameTrack::getGrayFilled(long * rows) {
+	if (!filledChanged) {
+		unique_lock<mutex> lock(m);
+		cva.wait(lock);
+	}
+	m.lock();
+	//std::cout << clock() << " fill get start" << endl;
+	memcpy(rows, backGrayRows, 20 * sizeof(long));
+	filledChanged = false;
+	//std::cout << clock() << " fill get end" << endl;
+	m.unlock();
+}
+
+void FrameTrack::setAllFilled(long * rows, long * grayRows) {
+	Mat img(this->mat, boardRect);
+	Mat mat = Util::toHSV(img);
+	Util::getFilled(rows, mat, grayRows);
+	filledChanged = true;
+}
+
+
 void FrameTrack::getNextPieces(Piece** nextPieces) {
 	if (!nextChanged) {
 		unique_lock<mutex> lock(m);
@@ -44,6 +57,13 @@ void FrameTrack::getNextPieces(Piece** nextPieces) {
 	}
 	m.lock();
 	//std::cout << clock()<<  " next get start" <<endl;
+	memcpy(nextPieces, backNext, 6 * sizeof(Piece*));
+	nextChanged = false;
+	//std::cout << clock() << " next get end" << endl;
+	m.unlock();
+}
+
+void FrameTrack::setNextPieces(Piece** nextPieces) {
 	Mat nextMat(this->mat, bigNextPiece);
 	Piece* nextPiece = Util::bigMat2Piece(nextMat);
 	nextPieces[0] = nextPiece;
@@ -52,9 +72,7 @@ void FrameTrack::getNextPieces(Piece** nextPieces) {
 		Piece* piece = Util::mat2Piece(next);
 		nextPieces[i + 1] = piece;
 	}
-	nextChanged = false;
-	//std::cout << clock() << " next get end" << endl;
-	m.unlock();
+	nextChanged = true;
 }
 
 int OpenLocalCamera(AVFormatContext *pFormatCtx)
@@ -259,60 +277,35 @@ int FrameTrack::startR()
 	SDL_Event event;
 	for (;;)
 	{
-		//Wait
-		SDL_WaitEvent(&event);
-		if (event.type == SFM_REFRESH_EVENT)
-		{
-			//------------------------------
-			if (av_read_frame(pFormatCtx, packet) >= 0)
-			{
-				if (packet->stream_index == videoindex)
-				{
-					m.lock();
+		av_read_frame(pFormatCtx, packet);
+		//std::cout << clock() << " set start" << endl;
+		avcodec_send_packet(pCodecCtx, packet);
+		avcodec_receive_frame(pCodecCtx, pFrame);
+		//std::cout << clock() << " got" << endl;
 
-					//std::cout << clock() << " set start" << endl;
-					decode(pCodecCtx, packet, pFrame, frameBGR, img_convert_ctx);
-					nextChanged = true;
-					fillChanged = true;
-					//std::cout << clock()<< " set end"  << endl;
-					m.unlock();
-					cva.notify_all();
-					
-					//SDL---------------------------
-					SDL_UpdateTexture(sdlTexture, NULL, frameBGR->data[0], frameBGR->linesize[0]);
+		sws_scale(img_convert_ctx, pFrame->data, pFrame->linesize, 0, pCodecCtx->height, frameBGR->data, frameBGR->linesize);
+		//std::cout << clock() << " set end" << endl;
 
-					SDL_RenderClear(sdlRenderer);
-					//SDL_RenderCopy(sdlRenderer, sdlTexture, &sdlRect, &sdlRect);
-					SDL_RenderCopy(sdlRenderer, sdlTexture, NULL, NULL);
-					SDL_RenderPresent(sdlRenderer);
-					//SDL End-----------------------
+		m.lock();
+		setAllFilled(backRows, backGrayRows);
+		//std::cout << clock() << " set fill end" << endl;
+		setNextPieces(backNext);
+		//std::cout << clock() << " set next end" << endl;
+		m.unlock();
+		cva.notify_all();
 
-				}
-				av_packet_unref(packet);
-			}
-			else
-			{
-				//Exit Thread
-				thread_exit = 1;
-			}
-		}
-		else if (event.type == SDL_KEYDOWN)
-		{
-			//Pause
-			if (event.key.keysym.sym == SDLK_SPACE)
-				thread_pause = !thread_pause;
-		}
-		else if (event.type == SDL_QUIT)
-		{
-			thread_exit = 1;
-		}
-		else if (event.type == SFM_BREAK_EVENT)
-		{
-			break;
-		}
+		//SDL---------------------------
+		SDL_UpdateTexture(sdlTexture, NULL, frameBGR->data[0], frameBGR->linesize[0]);
+		SDL_RenderClear(sdlRenderer);
+		SDL_RenderCopy(sdlRenderer, sdlTexture, NULL, NULL);
+		SDL_RenderPresent(sdlRenderer);
+		//SDL End-----------------------
+		//std::cout << clock() << " sdl end" << endl;
+
+		av_packet_unref(packet);
+
 	}
 	SDL_Quit();
-	//--------------
 	av_frame_free(&pFrame);
 	avcodec_close(pCodecCtx);
 	avformat_close_input(&pFormatCtx);
