@@ -4,4 +4,6 @@ Tetris99Bot的C++版本
 
 这是4年来我第一次用C++，所以代码非常乱。
 
-要想使用这个bot，你至少需要一张采集卡和一个可以模拟usb手柄的设备，详情见wchill的[SwitchInputEmulators](https://github.com/wchill/SwitchInputEmulators)
+要想使用这个bot，你需要一张低延迟的采集卡和一个可以模拟usb手柄的设备，详情见wchill的[SwitchInputEmulators](https://github.com/wchill/SwitchInputEmulators)
+
+![演示](demo.jpg)
