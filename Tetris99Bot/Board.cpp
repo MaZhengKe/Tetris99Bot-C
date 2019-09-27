@@ -127,7 +127,7 @@ inline int Board::clearRows(int x, int pieceHeight) {
 }
 
 
-int calc_01_change_count(long n_input)
+inline int calc_01_change_count(long n_input)
 {
 	n_input = n_input << 1;
 	n_input |= 0b100000000011;
@@ -145,7 +145,7 @@ int calc_01_change_count(long n_input)
 	return count;
 }
 
-bool isWell(long l,int y) {
+inline bool isWell(long l,int y) {
 	l = l << 1;
 	l |= 0b100000000011;
 
@@ -153,8 +153,18 @@ bool isWell(long l,int y) {
 	l &= 0b111;
 	return l == 0b101;
 }
+inline bool isTwoWell(long l,int y) {
+	l = l << 1;
+	l |= 0b100000000011;
+
+	l=l >> y;
+	l &= 0b1111;
+	return l == 0b1001;
+}
 
 int well[] = { 0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105,
+	120, 136, 153, 171, 190, 210 };
+int twoWell[] = { 0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105,
 	120, 136, 153, 171, 190, 210 };
 Value Board::value(int avgV) {
 
@@ -162,6 +172,7 @@ Value Board::value(int avgV) {
 	int colTransitions = 0;
 	int numberOfHoles = 0;
 	int wellSums = 0;
+	//int twoWellSums = 0;
 	for (int y = 0; y < 10; y++) {
 		bool now = true;
 		for (int x = 0; x < 20; x++) {
@@ -191,6 +202,7 @@ Value Board::value(int avgV) {
 
 	bool free0 = true;
 	int cnt = 0;
+	//int twoCnt = 0;
 	for (int x = 0; x < 20; x++) {
 		colTransitions += calc_01_change_count(rows[x]);
 
@@ -202,6 +214,15 @@ Value Board::value(int avgV) {
 				wellSums += well[cnt];
 				cnt = 0;
 			}
+			/*if (isTwoWell(rows[x],y)) {
+				twoCnt++;
+			}
+			else {
+				twoWellSums += twoWell[twoCnt];
+				twoCnt = 0;
+			}*/
+
+
 		}
 		if (isFilled(x, 0)) {
 			free0 = false;
@@ -213,11 +234,12 @@ Value Board::value(int avgV) {
 		f = 500;
 	}
 
-	int sumV = f-32 * rowTransitions
+	int sumV = f - 32 * rowTransitions
 		- 93 * colTransitions
 		//- 79 * numberOfHoles
 		- 500 * numberOfHoles
 		- 34 * wellSums;
+	//-17 * twoWellSums;
 	return  Value(avgV, sumV);
 }
 
@@ -380,7 +402,7 @@ Move* Board::get(int dep) {
 	}
 
 	Move* rs = new Move();
-	for (int i = 0; i < 4 && itr != moves->end(); i++) {
+	for (int i = 0; i < 3 && itr != moves->end(); i++) {
 		Move *move = (Move*)&*itr;
 		Board copy = this->copy();
 		copy.useMove(*move);

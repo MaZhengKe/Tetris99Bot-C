@@ -35,6 +35,7 @@ public:
 	cv::Mat mat;
 	bool nextChanged = false;
 	bool filledChanged = false;
+	bool grayRowsChanged = false;
 	void getFilled(long * rows);
 	void getGrayFilled(long * rows);
 	void setAllFilled(long * rows, long * grayRows);
