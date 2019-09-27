@@ -30,14 +30,14 @@ void FrameTrack::getFilled(long * rows) {
 	m.unlock();
 }
 void FrameTrack::getGrayFilled(long * rows) {
-	if (!filledChanged) {
+	if (!grayRowsChanged) {
 		unique_lock<mutex> lock(m);
 		cva.wait(lock);
 	}
 	m.lock();
 	//std::cout << clock() << " fill get start" << endl;
 	memcpy(rows, backGrayRows, 20 * sizeof(long));
-	filledChanged = false;
+	grayRowsChanged = false;
 	//std::cout << clock() << " fill get end" << endl;
 	m.unlock();
 }
@@ -47,6 +47,7 @@ void FrameTrack::setAllFilled(long * rows, long * grayRows) {
 	Mat mat = Util::toHSV(img);
 	Util::getFilled(rows, mat, grayRows);
 	filledChanged = true;
+	grayRowsChanged = true;
 }
 
 
@@ -283,6 +284,7 @@ int FrameTrack::startR()
 		avcodec_receive_frame(pCodecCtx, pFrame);
 		//std::cout << clock() << " got" << endl;
 
+		//TODO 直接从yuv图像中获取信息以节省(5ms)时间？
 		sws_scale(img_convert_ctx, pFrame->data, pFrame->linesize, 0, pCodecCtx->height, frameBGR->data, frameBGR->linesize);
 		//std::cout << clock() << " set end" << endl;
 
