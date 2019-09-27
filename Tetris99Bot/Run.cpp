@@ -49,7 +49,7 @@ inline bool allEqual(Piece** expected, Piece** now) {
 	return true;
 }
 
-int aa(void *opaque) {
+int startFrameTracker(void *opaque) {
 	frameTracker = FrameTrack();
 	frameTracker.startR();
 	return 0;
@@ -64,7 +64,7 @@ SDL_Rect rectL = { 227, 284, 60, 50 };
 SDL_Rect rectR = { 325, 284, 60, 50 };
 SDL_Rect rectU = { 282, 230, 60, 50 };
 #define dpad_N  8*9
-int bbb = dpad_N;
+int controllerState = dpad_N;
 
 #define dpad_L  6*9
 #define dpad_R  2*9
@@ -76,7 +76,7 @@ int bbb = dpad_N;
 #define button_L  5
 bool a = false;
 
-int createProController(void *opaque)
+int showProController(void *opaque)
 {
 	bool quit = false;
 	SDL_Event event;
@@ -111,8 +111,8 @@ int createProController(void *opaque)
 			break;
 		}
 
-		int buttom = bbb % 9;
-		int dpad = bbb - buttom;
+		int buttom = controllerState % 9;
+		int dpad = controllerState - buttom;
 
 
 		//如果指定显示位置使用下面注释起来的两句
@@ -159,11 +159,26 @@ int createProController(void *opaque)
 	return 0;
 }
 
-
 CComm cComm;
+inline void send(int state) {
+	cComm.WriteByte(state);
+	controllerState = state;
+}
+
+inline void wait(int t) {
+	int time = clock();
+	while (clock() - time < t) {
+		continue;
+	}
+}
 
 int rs[15];
 int i = 0;
+//int dsl[] = {0,30,60,90,280,390};
+//int dsl[] = {0,30,60,90,290,390}; 4 m
+//int dsl[] = {0,30,60,90,295,390}; ok
+//int dsl[] = {0,30,60,90,295,355}; 4 m
+int dsl[] = {0,30,60,90,296,370};
 inline void exec(Move move) {
 	i = 0;
 
@@ -194,6 +209,39 @@ inline void exec(Move move) {
 		moveY = y - startY;
 	}
 
+	if (abs(moveY) == 5) {
+
+		int mTime =dsl[abs(moveY)];
+		int rTime = abs(rotate) * 58;
+		int r = mTime - rTime;
+
+		if (move.m.isUseHold) {
+			send(dpad_N + button_L);
+			wait(29);
+			send(dpad_N);
+			wait(29);
+		}
+		int direction = moveY > 0 ? dpad_R : dpad_L;
+		int rotateDirc =  rotate > 0 ? button_A : button_X;
+		send(direction);
+		wait(r);
+		for (int i = 0; i < abs(rotate); i++) {
+			send(direction + rotateDirc);
+			wait(29);
+			send(direction);
+			wait(29);
+		}
+		send(dpad_U);
+		wait(29);
+		send(dpad_N);
+		wait(29);
+		cout << clock() << " dsl end " << abs(moveY)<< endl;
+		return;
+
+
+	}
+	//
+
 	if (abs(rotate) > abs(moveY)) {
 
 		for (int k = 0; k < abs(rotate); k++) {
@@ -218,33 +266,19 @@ inline void exec(Move move) {
 			}
 		}
 	}
-
-	//int max = max(abs(rotate), abs(moveY));
-	//for (int k = 0; k < max; k++) {
-	//	if (k < abs(rotate) && k < abs(moveY)) {
-	//		rs[i++] = (moveY > 0 ? dpad_R : dpad_L) + (rotate > 0 ? button_A : button_X);
-	//	}
-	//	else if (k < abs(rotate)) {
-	//		rs[i++] = dpad_N + (rotate > 0 ? button_A : button_X);
-	//	}
-	//	else {
-	//		rs[i++] = moveY > 0 ? dpad_R : dpad_L;
-	//	}
-	//}
 	rs[i++] = 0;
 	rs[i++] = 72;
 
 	for (int j = 0; j < i; j++) {
-		//cout << rs[j] << endl;
 		cComm.WriteByte(rs[j]);
-		bbb = rs[j];
+		controllerState = rs[j];
 		int time = clock();
 
 		while (clock() - time < 29) {
 			continue;
 		}
 		cComm.WriteByte(dpad_N);
-		bbb = dpad_N;
+		controllerState = dpad_N;
 		time = clock();
 		while (clock() - time < 29) {
 			continue;
@@ -424,8 +458,8 @@ void run() {
 int main(int argc, char* argv[]) {
 	av_log_set_level(AV_LOG_PANIC);
 	Util::init();
-	SDL_Thread *pro_id = SDL_CreateThread(createProController, "Pro Thread", NULL);
-	SDL_Thread *video_tid = SDL_CreateThread(aa, "Get Thread", NULL);
+	SDL_CreateThread(showProController, "ShowProController Thread", NULL);
+	SDL_CreateThread(startFrameTracker, "FrameTracker Thread", NULL);
 	openComm();
 	Sleep(5000);
 	while (true) {
