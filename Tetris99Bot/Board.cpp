@@ -3,6 +3,7 @@
 int Board::s[] = { 0, -800, -800, -300, 6200 };
 long Board::EMPTY_ROW = 0;
 long Board::FULL_ROW = 0x3FF;
+ int Board::unIdentify = 0;
 Board::Board() {}
 
 inline Board::Board(long rows[20], Piece* next[6], Piece* hold, Piece *currentPiece) {
@@ -48,6 +49,9 @@ inline int Board::fill(int y, PieceShape* shape) {
 	int x = minX(y, shape);
 	if (x == 20) {
 		return x;
+	}
+	if (x - shape->h +1 < unIdentify) {
+		return -99999;
 	}
 	bool isCreateHole = fill(x, y, shape);
 
@@ -164,15 +168,37 @@ inline bool isTwoWell(long l,int y) {
 
 int well[] = { 0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105,
 	120, 136, 153, 171, 190, 210 };
-int twoWell[] = { 0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105,
+int twoWell[] = { 0, 0, 1, 10, 15, 21, 28, 28, 36, 45, 55, 66, 78, 91, 105,
 	120, 136, 153, 171, 190, 210 };
-Value Board::value(int avgV) {
+
+ inline Value Board::value(int y, PieceShape* shape) {
+
+	int x = minX(y, shape);
+	// 超高
+	if (x == 20) {
+		return  Value(-99999, -99999);
+	}
+	//不允许放置
+	if (x - shape->h + 1 < unIdentify) {
+		return Value(-99999, -99999);
+	}
+
+	bool isCreateHole = fill(x, y, shape);
+
+	int clean = clearRows(x, shape->h);
+	//创建了新的洞且没有消除任何行
+	if (isCreateHole && clean == 0) {
+		return Value(-99999, -99999);
+	}
+	//平均高度
+	int height = 2 * x + shape->h - 1;
+	//        return 34 * cleaned - height * 45;
 
 	int rowTransitions = 0;
 	int colTransitions = 0;
 	int numberOfHoles = 0;
 	int wellSums = 0;
-	//int twoWellSums = 0;
+	int twoWellSums = 0;
 	for (int y = 0; y < 10; y++) {
 		bool now = true;
 		for (int x = 0; x < 20; x++) {
@@ -202,7 +228,87 @@ Value Board::value(int avgV) {
 
 	bool free0 = true;
 	int cnt = 0;
-	//int twoCnt = 0;
+	int twoCnt = 0;
+	for (int x = 0; x < 20; x++) {
+		colTransitions += calc_01_change_count(rows[x]);
+
+		for (int y = 1; y < 10; y++) {
+			if (isWell(rows[x], y)) {
+				cnt++;
+			}
+			else {
+				wellSums += well[cnt];
+				cnt = 0;
+			}
+			if (isTwoWell(rows[x], y)) {
+				twoCnt++;
+			}
+			else {
+				twoWellSums += twoWell[twoCnt];
+				twoCnt = 0;
+			}
+
+
+		}
+		if (isFilled(x, 0)) {
+			free0 = false;
+		}
+	}
+
+	int f = 0;
+	if (free0) {
+		f = 800;
+	}
+
+	int sumV = f - 32 * rowTransitions
+		- 93 * colTransitions
+		//- 79 * numberOfHoles
+		- 1000 * numberOfHoles
+		- 34 * wellSums
+		- 34 * twoWellSums;
+	//如果左侧为空并且场上没有洞，惩罚消除1、2、3行，否则优先消除洞
+	return  Value((free0 && numberOfHoles == 0 ?s[clean]:0) - height * 22 , sumV);
+}
+
+
+
+Value Board::value(int avgV) {
+
+	int rowTransitions = 0;
+	int colTransitions = 0;
+	int numberOfHoles = 0;
+	int wellSums = 0;
+	int twoWellSums = 0;
+	for (int y = 0; y < 10; y++) {
+		bool now = true;
+		for (int x = 0; x < 20; x++) {
+			if (isFilled(x, y) != now) {
+				now = isFilled(x, y);
+				rowTransitions++;
+			}
+		}
+		if (!now)
+			rowTransitions++;
+
+		bool f = false;
+		int block = 0;
+		for (int x = 19; x >= 0; x--) {
+			if (isFilled(x, y)) {
+				f = true;
+				block++;
+			}
+			else if (f) {
+				numberOfHoles += block;
+				f = false;
+				block = 0;
+			}
+		}
+	}
+
+
+	bool free0 = true;
+	int cnt = 0;
+	int twoCnt = 0;
 	for (int x = 0; x < 20; x++) {
 		colTransitions += calc_01_change_count(rows[x]);
 
@@ -214,13 +320,13 @@ Value Board::value(int avgV) {
 				wellSums += well[cnt];
 				cnt = 0;
 			}
-			/*if (isTwoWell(rows[x],y)) {
+			if (isTwoWell(rows[x],y)) {
 				twoCnt++;
 			}
 			else {
 				twoWellSums += twoWell[twoCnt];
 				twoCnt = 0;
-			}*/
+			}
 
 
 		}
@@ -237,9 +343,9 @@ Value Board::value(int avgV) {
 	int sumV = f - 32 * rowTransitions
 		- 93 * colTransitions
 		//- 79 * numberOfHoles
-		- 500 * numberOfHoles
-		- 34 * wellSums;
-	//-17 * twoWellSums;
+		- 1000 * numberOfHoles
+		- 34 * wellSums
+	    -34 * twoWellSums;
 	return  Value(avgV, sumV);
 }
 
@@ -391,7 +497,7 @@ Move* Board::get(int dep) {
 	set<Move> *moves = new set<Move>();
 	getMoves(moves);
 	if (moves->empty()) {
-		return 0;
+		return backGet();
 	}
 	set<Move>::iterator itr;
 	itr = moves->begin();
@@ -448,12 +554,12 @@ inline void Board::getPieceMoves(set<Move> *moves, Piece* piece, bool isUseHold)
 		PieceShape* shape = piece->pieceShapes[i];
 		int width = shape->w;
 		for (int y = 0; y <= 10 - width; y++) {
+
 			Board copy = this->copy();
-			int v = copy.fill(y, shape);
-			if (v == -99999) {
+			Value value = copy.value(y,shape);
+			if (value.avgV == -99999) {
 				continue;
 			}
-			Value value = copy.value(v);
 			Move* tmp = new Move(y, i, piece, value, isUseHold);
 			moves->insert(*tmp);
 		}

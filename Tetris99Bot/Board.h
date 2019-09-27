@@ -4,12 +4,13 @@
 #include "Value.h"
 #include "Move.h"
 
+
 class Board {
 public:
 	static int s[];
 	static long EMPTY_ROW;
 	static long FULL_ROW;
-
+	static int unIdentify;
 	long rows[20];	
 	Piece* next[6];
 	Piece* hold;
@@ -27,6 +28,7 @@ public:
 	int minX(int y, PieceShape* shape);
 	int clearRows(int x, int pieceHeight);
 	Value value(int avgV);
+	Value value(int y, PieceShape* shape);
 	bool isFilled(int x, int y);
 	bool isFree(int x, int y);
 	void paintAll(Move move);
@@ -42,4 +44,5 @@ public:
 	void refreshNext();
 	void fill(Move move);
 };
+
 

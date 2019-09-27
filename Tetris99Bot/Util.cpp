@@ -46,7 +46,7 @@ int matSim(Mat mat, Mat subMat, int h, int w) {
 		for (int y = 0; y < h; y++) {
 			int diff = abs(mat.ptr(y * 4)[x * 3 * 4] - subMat.ptr(y * 4)[x * 3 * 4]) + abs(mat.ptr(y * 4)[x * 3 * 4 + 1] - subMat.ptr(y * 4)[x * 3 * 4 + 1]) + abs(mat.ptr(y * 4)[x * 3 * 4 + 2] - subMat.ptr(y * 4)[x * 3 * 4 + 2]);
 			//log.info("{} {} {}", x, y, diff);
-			if (diff < 80) {
+			if (diff < 100) {
 				match++;
 			}
 		}
@@ -58,7 +58,6 @@ int matSim(Mat mat, Mat subMat, int h, int w) {
 Piece* Util::bigMat2Piece(Mat mat) {
 	Piece * candidate = NULL;
 	int max = 300;
-	//BufferedImage bufferedImage = toBufferedImage(mat);
 	for (Piece * piece : pieces) {
 		int similarity = matSim(mat, piece->getBigMat(), 13, 26);
 		//log.info("{} {}",piece,similarity);
