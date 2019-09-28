@@ -6,4 +6,12 @@ Tetris99Bot的C++版本
 
 要想使用这个bot，你需要一张低延迟的采集卡和一个可以模拟usb手柄的设备，详情见wchill的[SwitchInputEmulators](https://github.com/wchill/SwitchInputEmulators)
 
+
+需要的库：
+- OpenCV 
+- FFmpeg 
+- SDL
+- SDL2_image
+
+
 ![演示](demo.jpg)
