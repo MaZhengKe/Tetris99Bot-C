@@ -181,10 +181,6 @@ int i = 0;
 int dsl[] = {0,30,60,90,296,370};
 inline void exec(Move move) {
 	i = 0;
-
-	if (move.m.isUseHold) {
-		rs[i++] = dpad_N + button_L;
-	}
 	int rotate = 0;
 	int moveY = 0;
 
@@ -213,13 +209,13 @@ inline void exec(Move move) {
 
 		int mTime =dsl[abs(moveY)];
 		int rTime = abs(rotate) * 58;
-		int r = mTime - rTime;
+		int r = mTime - rTime-29;
 
 		if (move.m.isUseHold) {
 			send(dpad_N + button_L);
 			wait(29);
 			send(dpad_N);
-			wait(29);
+			wait(35);
 		}
 		int direction = moveY > 0 ? dpad_R : dpad_L;
 		int rotateDirc =  rotate > 0 ? button_A : button_X;
@@ -231,11 +227,13 @@ inline void exec(Move move) {
 			send(direction);
 			wait(29);
 		}
+		send(direction);
+		wait(29);
 		send(dpad_U);
 		wait(29);
 		send(dpad_N);
 		wait(29);
-		cout << clock() << " dsl end " << abs(moveY)<< endl;
+		//cout << clock() << " dsl end " << abs(moveY)<< endl;
 		return;
 
 
@@ -269,25 +267,19 @@ inline void exec(Move move) {
 	rs[i++] = 0;
 	rs[i++] = 72;
 
-	for (int j = 0; j < i; j++) {
-		cComm.WriteByte(rs[j]);
-		controllerState = rs[j];
-		int time = clock();
-
-		while (clock() - time < 29) {
-			continue;
-		}
-		cComm.WriteByte(dpad_N);
-		controllerState = dpad_N;
-		time = clock();
-		while (clock() - time < 29) {
-			continue;
-		}
+	if (move.m.isUseHold) {
+		send(dpad_N + button_L);
+		wait(29);
+		send(dpad_N);
+		wait(35);
 	}
-	cout << clock() << " end " << endl;
-
-
-
+	for (int j = 0; j < i; j++) {
+		send(rs[j]);
+		wait(29);
+		send(dpad_N);
+		wait(29);
+	}
+	//cout << clock() << " end " << endl;
 
 	//cout << endl;
 }
@@ -385,11 +377,11 @@ void run() {
 			}
 		}
 		if(nextPieceNum == 0 || (cannotOnlyOne && nextPieceNum == 1)){
-			std::cout << clock() << " get " << nextPieceNum <<" piece,继续获取" << endl;
+			//std::cout << clock() << " get " << nextPieceNum <<" piece,继续获取" << endl;
 			continue;
 		}
 
-		std::cout << clock() << " get " << nextPieceNum << " piece" << endl;
+		//std::cout << clock() << " get " << nextPieceNum << " piece" << endl;
 		if (notEqual(nextBoard.next, board.next, nextPieceNum)) {
 			if (time(NULL) - seconds > 10)
 				return;
@@ -404,21 +396,20 @@ void run() {
 
 		seconds = time(NULL);
 
-		std::cout << clock() << " next changed" << endl;
+		//std::cout << clock() << " next changed" << endl;
 		frameTracker.getFilled(board.rows);
 		int r = correction(board.rows, nextBoard.rows);
 		if (r == -1)
 			return;
 		board.hold = nextBoard.hold;
 		board.currentPiece = nextBoard.currentPiece;
-		std::cout << clock() << " 图像获取完成" << endl;
+		//std::cout << clock() << " 图像获取完成" << endl;
 		Move* move = board.get(nextPieceNum);
-		board.paintAll(*move);
-		std::cout << move->m.piece->character() << " "
-			<< move->m.rotateIndex << " " << move->m.y << endl;
-		std::cout << clock() << " 结果计算完成" << endl;
+		//std::cout << move->m.piece->character() << " "
+			//<< move->m.rotateIndex << " " << move->m.y << endl;
+		//std::cout << clock() << " 结果计算完成" << endl;
 		exec(*move);
-
+		board.paintAll(*move);
 
 		if (Board::unIdentify > 0) {
 
@@ -427,7 +418,7 @@ void run() {
 
 				if (time(NULL) - seconds > 10)
 					return;
-				std::cout << clock() << " 重新计算未确定的行" << endl;
+				//std::cout << clock() << " 重新计算未确定的行" << endl;
 				frameTracker.getGrayFilled(gray);
 			} while (!allGarbage(gray));
 
@@ -437,7 +428,7 @@ void run() {
 
 			Board::unIdentify = 0;
 
-			std::cout << clock() << " 重新计算完毕" << endl;
+			//std::cout << clock() << " 重新计算完毕" << endl;
 			board.paint();
 		}
 
@@ -521,7 +512,7 @@ inline int correction(long* board, long* expected) {
 
 	// startX是上升的高度
 	if (startX > 0) {
-		cout << clock() << " 高度上升：" << startX << endl;
+		//cout << clock() << " 高度上升：" << startX << endl;
 
 		long gray[20];
 		frameTracker.getGrayFilled(gray);
@@ -530,9 +521,9 @@ inline int correction(long* board, long* expected) {
 		bool canBreak = true;
 		int x = startX - 1;
 
-		cout << clock() << " 当前行需要识别并判断是否可结束" << x << endl;
+		//cout << clock() << " 当前行需要识别并判断是否可结束" << x << endl;
 		if (isGarbage(gray[x])) {
-			cout << clock() << " 当前行已全部识别，判断是否可结束" << x << endl;
+			//cout << clock() << " 当前行已全部识别，判断是否可结束" << x << endl;
 			for (int y = 0; y < 10; y++) {
 				//只要垃圾行没有方块的那一列之前也没有方块
 				if (gray[x] && 1 << y == 0 && !hasBlock(expected, y))
@@ -544,12 +535,12 @@ inline int correction(long* board, long* expected) {
 			else {
 				Board::unIdentify = startX;
 			}
-			cout << clock() << " 未确定的行数 " << Board::unIdentify << endl;
+			//cout << clock() << " 未确定的行数 " << Board::unIdentify << endl;
 
 		}
 		else
 		{
-			cout << clock() << " 当前行未全部识别" << x << endl;
+			//cout << clock() << " 当前行未全部识别" << x << endl;
 			Board::unIdentify = startX;
 			canBreak = false;
 		}
