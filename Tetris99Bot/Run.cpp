@@ -12,11 +12,11 @@ int main(int argc, char * argv[]);
 int getHeight(long* filled);
 int andNum(long n);
 bool isGarbage(long row);
-int correction(long* board, long* expected, int numToRefresh);
+int correction(long* board, long* expected);
 void filling(long* board, long* expected, int startX, int expectedHight);
 static bool ready(Piece** nextPieces);
 Board getBoard();
-bool notEqual(Piece** expected, Piece** now);
+bool notEqual(Piece** expected, Piece** now, int num);
 
 static bool ready(Piece** nextPieces) {
 	for (int i = 0; i < 6; i++) {
@@ -32,8 +32,9 @@ Board getBoard() {
 	frameTracker.getNextPieces(board.next);
 	return board;
 }
-inline bool notEqual(Piece** expected, Piece** now) {
-	for (int i = 0; i < 3; i++) {
+inline bool notEqual(Piece** expected, Piece** now, int num)
+{
+	for (int i = 0; i < num; i++) {
 		if (expected[i] != NULL && !(now[i] == expected[i]))
 			return true;
 	}
@@ -48,7 +49,7 @@ inline bool allEqual(Piece** expected, Piece** now) {
 	return true;
 }
 
-int aa(void *opaque) {
+int startFrameTracker(void *opaque) {
 	frameTracker = FrameTrack();
 	frameTracker.startR();
 	return 0;
@@ -63,7 +64,7 @@ SDL_Rect rectL = { 227, 284, 60, 50 };
 SDL_Rect rectR = { 325, 284, 60, 50 };
 SDL_Rect rectU = { 282, 230, 60, 50 };
 #define dpad_N  8*9
-int bbb = dpad_N;
+int controllerState = dpad_N;
 
 #define dpad_L  6*9
 #define dpad_R  2*9
@@ -75,7 +76,7 @@ int bbb = dpad_N;
 #define button_L  5
 bool a = false;
 
-int createProController(void *opaque)
+int showProController(void *opaque)
 {
 	bool quit = false;
 	SDL_Event event;
@@ -110,8 +111,8 @@ int createProController(void *opaque)
 			break;
 		}
 
-		int buttom = bbb % 9;
-		int dpad = bbb - buttom;
+		int buttom = controllerState % 9;
+		int dpad = controllerState - buttom;
 
 
 		//如果指定显示位置使用下面注释起来的两句
@@ -158,22 +159,28 @@ int createProController(void *opaque)
 	return 0;
 }
 
-
-
-
-
-
 CComm cComm;
+inline void send(int state) {
+	cComm.WriteByte(state);
+	controllerState = state;
+}
 
-int unIdentify;
+inline void wait(int t) {
+	int time = clock();
+	while (clock() - time < t) {
+		continue;
+	}
+}
+
 int rs[15];
 int i = 0;
+//int dsl[] = {0,30,60,90,280,390};
+//int dsl[] = {0,30,60,90,290,390}; 4 m
+//int dsl[] = {0,30,60,90,295,390}; ok
+//int dsl[] = {0,30,60,90,295,355}; 4 m
+int dsl[] = {0,30,60,90,296,370};
 inline void exec(Move move) {
 	i = 0;
-
-	if (move.m.isUseHold) {
-		rs[i++] = dpad_N + button_L;
-	}
 	int rotate = 0;
 	int moveY = 0;
 
@@ -197,6 +204,41 @@ inline void exec(Move move) {
 		}
 		moveY = y - startY;
 	}
+
+	if (abs(moveY) == 5) {
+
+		int mTime =dsl[abs(moveY)];
+		int rTime = abs(rotate) * 58;
+		int r = mTime - rTime-29;
+
+		if (move.m.isUseHold) {
+			send(dpad_N + button_L);
+			wait(29);
+			send(dpad_N);
+			wait(35);
+		}
+		int direction = moveY > 0 ? dpad_R : dpad_L;
+		int rotateDirc =  rotate > 0 ? button_A : button_X;
+		send(direction);
+		wait(r);
+		for (int i = 0; i < abs(rotate); i++) {
+			send(direction + rotateDirc);
+			wait(29);
+			send(direction);
+			wait(29);
+		}
+		send(direction);
+		wait(29);
+		send(dpad_U);
+		wait(29);
+		send(dpad_N);
+		wait(29);
+		//cout << clock() << " dsl end " << abs(moveY)<< endl;
+		return;
+
+
+	}
+	//
 
 	if (abs(rotate) > abs(moveY)) {
 
@@ -222,42 +264,22 @@ inline void exec(Move move) {
 			}
 		}
 	}
-
-	//int max = max(abs(rotate), abs(moveY));
-	//for (int k = 0; k < max; k++) {
-	//	if (k < abs(rotate) && k < abs(moveY)) {
-	//		rs[i++] = (moveY > 0 ? dpad_R : dpad_L) + (rotate > 0 ? button_A : button_X);
-	//	}
-	//	else if (k < abs(rotate)) {
-	//		rs[i++] = dpad_N + (rotate > 0 ? button_A : button_X);
-	//	}
-	//	else {
-	//		rs[i++] = moveY > 0 ? dpad_R : dpad_L;
-	//	}
-	//}
 	rs[i++] = 0;
 	rs[i++] = 72;
 
-	for (int j = 0; j < i; j++) {
-		//cout << rs[j] << endl;
-		cComm.WriteByte(rs[j]);
-		bbb = rs[j];
-		int time = clock();
-
-		while (clock() - time < 29) {
-			continue;
-		}
-		cComm.WriteByte(dpad_N);
-		bbb = dpad_N;
-		time = clock();
-		while (clock() - time < 29) {
-			continue;
-		}
+	if (move.m.isUseHold) {
+		send(dpad_N + button_L);
+		wait(29);
+		send(dpad_N);
+		wait(35);
 	}
-	cout << clock() << " end " << endl;
-
-
-
+	for (int j = 0; j < i; j++) {
+		send(rs[j]);
+		wait(29);
+		send(dpad_N);
+		wait(29);
+	}
+	//cout << clock() << " end " << endl;
 
 	//cout << endl;
 }
@@ -296,7 +318,7 @@ void openComm() {
 
 inline bool allGarbage(long rows[20]) {
 
-	for (int x = unIdentify; x >= 0; x--) {
+	for (int x = Board::unIdentify - 1; x >= 0; x--) {
 		if (!isGarbage(rows[x])) {
 			return false;
 		}
@@ -306,6 +328,7 @@ inline bool allGarbage(long rows[20]) {
 
 time_t seconds;
 int height = 0;
+bool cannotOnlyOne = true;
 void run() {
 	pressA();
 	pressB();
@@ -313,7 +336,7 @@ void run() {
 	pressA();
 	pressA(1000);
 	height = 0;
-
+	Board::unIdentify = 0;
 	Piece* nextPieces[6];
 
 	time_t secondsStart;
@@ -340,76 +363,78 @@ void run() {
 
 	while (true) {
 
+		// 获取next
 		frameTracker.getNextPieces(board.next);
-		//cout << clock() << " ";
-		bool haveNull = false;
 
-		if (time(NULL) - seconds > 20)
+		if (time(NULL) - seconds > 10)
 			return;
 
+		int nextPieceNum = 0;
 		for (int i = 0; i < 3; i++) {
-			if (board.next[i] == NULL) {
-				cout << clock() << " 有空的next" << endl;
-				haveNull = true;
-				break;
+			if (board.next[i] != NULL)
+			{
+				nextPieceNum++;
 			}
-			//cout << string(1, board.next[i]->character());
 		}
-
-		if (haveNull) {
+		if(nextPieceNum == 0 || (cannotOnlyOne && nextPieceNum == 1)){
+			//std::cout << clock() << " get " << nextPieceNum <<" piece,继续获取" << endl;
 			continue;
 		}
 
-		if (notEqual(nextBoard.next, board.next)) {
-			if (time(NULL) - seconds > 20)
+		//std::cout << clock() << " get " << nextPieceNum << " piece" << endl;
+		if (notEqual(nextBoard.next, board.next, nextPieceNum)) {
+			if (time(NULL) - seconds > 10)
 				return;
-			seconds = time(NULL);
 			continue;
+		}
+
+		for (int i = 0; i < 6; i++) {
+			if (board.next[i] == NULL) {
+				board.next[i] = nextBoard.next[i];
+			}
 		}
 
 		seconds = time(NULL);
 
-		std::cout << clock() << " next changed" << endl;
+		//std::cout << clock() << " next changed" << endl;
 		frameTracker.getFilled(board.rows);
-		int r = correction(board.rows, nextBoard.rows, 5);
+		int r = correction(board.rows, nextBoard.rows);
 		if (r == -1)
 			return;
-
 		board.hold = nextBoard.hold;
 		board.currentPiece = nextBoard.currentPiece;
-		board.paint();
-		std::cout << clock() << " 图像获取完成" << endl;
-		Move* move = board.get(3);
-		if (!move) {
-			move = board.backGet();
-		}
-		board.paintAll(*move);
-		std::cout << move->m.piece->character() << " "
-			<< move->m.rotateIndex << " " << move->m.y << endl;
-		std::cout << clock() << " 结果计算完成" << endl;
+		//std::cout << clock() << " 图像获取完成" << endl;
+		Move* move = board.get(nextPieceNum);
+		//std::cout << move->m.piece->character() << " "
+			//<< move->m.rotateIndex << " " << move->m.y << endl;
+		//std::cout << clock() << " 结果计算完成" << endl;
 		exec(*move);
+		board.paintAll(*move);
 
-
-		if (unIdentify > 0) {
+		if (Board::unIdentify > 0) {
 
 			long gray[10];
 			do {
 
-				if (time(NULL) - seconds > 20)
+				if (time(NULL) - seconds > 10)
 					return;
-				std::cout << clock() << " 重新计算未确定的行" << endl;
+				//std::cout << clock() << " 重新计算未确定的行" << endl;
 				frameTracker.getGrayFilled(gray);
 			} while (!allGarbage(gray));
 
-			for (int x = 0; x < unIdentify; x++) {
+			for (int x = 0; x < Board::unIdentify; x++) {
 				board.rows[x] = gray[x];
 			}
 
-			unIdentify = 0;
+			Board::unIdentify = 0;
+
+			//std::cout << clock() << " 重新计算完毕" << endl;
+			board.paint();
 		}
 
 
 		//std::cout << clock() << " 结果执行完成" << endl;
+		cannotOnlyOne = board.next[0] == board.next[1];
 
 		board.useMove(*move);
 		//交换空间节省时间开销
@@ -424,8 +449,8 @@ void run() {
 int main(int argc, char* argv[]) {
 	av_log_set_level(AV_LOG_PANIC);
 	Util::init();
-	SDL_Thread *pro_id = SDL_CreateThread(createProController, "Pro Thread", NULL);
-	SDL_Thread *video_tid = SDL_CreateThread(aa, "Get Thread", NULL);
+	SDL_CreateThread(showProController, "ShowProController Thread", NULL);
+	SDL_CreateThread(startFrameTracker, "FrameTracker Thread", NULL);
 	openComm();
 	Sleep(5000);
 	while (true) {
@@ -468,82 +493,60 @@ inline bool hasBlock(long rows[10], int y) {
 	return false;
 }
 
-inline int correction(long* board, long* expected, int numToRefresh) {
+inline int correction(long* board, long* expected) {
 
-
-	if (time(NULL) - seconds > 20)
-		return -1;
-	if (numToRefresh < 0) {
-		frameTracker.getFilled(board);
-		numToRefresh = 5;
-	}
-
+	// TODO 这个startX获取的正确与否很重要
 	int startX = 0;
 	int maxSim = -1;
-	bool hasEq = false;
 	if (height > 0)
 		for (int x = 0; x < 20 - height; x++) {
-
 			int match = 0;
-
 			for (int xx = 0; xx < height; xx++) {
 				match += andNum(~(expected[xx] ^ board[xx + x]));
 			}
-			if (match == maxSim) {
-				hasEq = true;
-			}
 			if (match > maxSim) {
-				hasEq = false;
 				maxSim = match;
 				startX = x;
 			}
 		}
 
-	if (hasEq) {
-		// TODO 这样判别不准确
-		cout << clock() << " 判断不出，重新获取" << endl;
-		frameTracker.getFilled(board);
-		return correction(board, expected, numToRefresh - 1);
-	}
 	// startX是上升的高度
 	if (startX > 0) {
-		cout << clock() << " 高度上升：" << startX << endl;
+		//cout << clock() << " 高度上升：" << startX << endl;
 
 		long gray[20];
 		frameTracker.getGrayFilled(gray);
 
-		unIdentify = 0;
-		for (int x = startX - 1; x >= 0; x--) {
-			cout << clock() << " 当前行需要识别并判断是否可结束" << x << endl;
-			if (isGarbage(gray[x])) {
-				cout << clock() << " 当前行已全部识别，判断是否可结束" << x << endl;
-				bool canBreak = true;
-				for (int y = 0; y < 10; y++) {
-					//如果之前没有方块，确定的垃圾行也没有方块
-					if (!hasBlock(expected, y))
-						if (gray[x] && 1 << y == 0)
-							canBreak = false;
-				}
+		Board::unIdentify = 0;
+		bool canBreak = true;
+		int x = startX - 1;
 
-				if (canBreak) {
-					unIdentify = x;
-					cout << clock() << " 未确定的行数 " << unIdentify << endl;
-					break;
-				}
+		//cout << clock() << " 当前行需要识别并判断是否可结束" << x << endl;
+		if (isGarbage(gray[x])) {
+			//cout << clock() << " 当前行已全部识别，判断是否可结束" << x << endl;
+			for (int y = 0; y < 10; y++) {
+				//只要垃圾行没有方块的那一列之前也没有方块
+				if (gray[x] && 1 << y == 0 && !hasBlock(expected, y))
+					canBreak = false;
 			}
-			else
-			{
-				cout << clock() << " 当前行未全部识别,重新获取" << x << endl;
-				frameTracker.getGrayFilled(gray);
-				x++;
+			if (canBreak) {
+				Board::unIdentify = x;
+			}
+			else {
+				Board::unIdentify = startX;
+			}
+			//cout << clock() << " 未确定的行数 " << Board::unIdentify << endl;
 
-				if (time(NULL) - seconds > 20)
-					return -1;
-			}
+		}
+		else
+		{
+			//cout << clock() << " 当前行未全部识别" << x << endl;
+			Board::unIdentify = startX;
+			canBreak = false;
 		}
 
 		for (int x = 0; x < startX; x++) {
-			if (x < unIdentify) {
+			if (x < Board::unIdentify) {
 				board[x] = Board::EMPTY_ROW;
 			}
 			else
@@ -552,9 +555,7 @@ inline int correction(long* board, long* expected, int numToRefresh) {
 			}
 		}
 	}
-
 	filling(board, expected, startX, height);
-
 	return 0;
 }
 inline void filling(long* board, long* expected, int startX, int expectedHight) {

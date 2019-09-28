@@ -45,9 +45,12 @@ void FrameTrack::getGrayFilled(long * rows) {
 void FrameTrack::setAllFilled(long * rows, long * grayRows) {
 	Mat img(this->mat, boardRect);
 	Mat mat = Util::toHSV(img);
+
+	m.lock();
 	Util::getFilled(rows, mat, grayRows);
 	filledChanged = true;
 	grayRowsChanged = true;
+	m.unlock();
 }
 
 
@@ -67,6 +70,7 @@ void FrameTrack::getNextPieces(Piece** nextPieces) {
 void FrameTrack::setNextPieces(Piece** nextPieces) {
 	Mat nextMat(this->mat, bigNextPiece);
 	Piece* nextPiece = Util::bigMat2Piece(nextMat);
+	m.lock();
 	nextPieces[0] = nextPiece;
 	for (int i = 0; i < 5; i++) {
 		Mat next(mat, smallNextPieces[i]);
@@ -74,6 +78,7 @@ void FrameTrack::setNextPieces(Piece** nextPieces) {
 		nextPieces[i + 1] = piece;
 	}
 	nextChanged = true;
+	m.unlock();
 }
 
 int OpenLocalCamera(AVFormatContext *pFormatCtx)
@@ -278,6 +283,7 @@ int FrameTrack::startR()
 	SDL_Event event;
 	for (;;)
 	{
+		//不响应任何事件，包括移动窗口等，以加速帧的获取
 		av_read_frame(pFormatCtx, packet);
 		//std::cout << clock() << " set start" << endl;
 		avcodec_send_packet(pCodecCtx, packet);
@@ -288,12 +294,10 @@ int FrameTrack::startR()
 		sws_scale(img_convert_ctx, pFrame->data, pFrame->linesize, 0, pCodecCtx->height, frameBGR->data, frameBGR->linesize);
 		//std::cout << clock() << " set end" << endl;
 
-		m.lock();
-		setAllFilled(backRows, backGrayRows);
-		//std::cout << clock() << " set fill end" << endl;
 		setNextPieces(backNext);
 		//std::cout << clock() << " set next end" << endl;
-		m.unlock();
+		setAllFilled(backRows, backGrayRows);
+		//std::cout << clock() << " set fill end" << endl;
 		cva.notify_all();
 
 		//SDL---------------------------
