@@ -54,9 +54,7 @@ int startFrameTracker(void *opaque) {
 	frameTracker.startR();
 	return 0;
 }
-
-#define EVENT_B_A  (SDL_USEREVENT + 3)
-#define EVENT_NONE  (SDL_USEREVENT + 4)
+// proController绘图区域
 SDL_Rect rectA = { 719, 156, 60, 60 };
 SDL_Rect rectX = { 650, 96, 60, 60 };
 SDL_Rect rectZL = { 208, 2, 60, 40 };
@@ -66,6 +64,7 @@ SDL_Rect rectU = { 282, 230, 60, 50 };
 #define dpad_N  8*9
 int controllerState = dpad_N;
 
+// 与单片机的串口通信的简略编码 = dpad*9+button
 #define dpad_L  6*9
 #define dpad_R  2*9
 #define dpad_U  0*9
@@ -87,13 +86,15 @@ int showProController(void *opaque)
 	IMG_Init(IMG_INIT_JPG);
 
 	//建立SDL窗口
-	SDL_Window * window = SDL_CreateWindow("SDL2 Displaying Image",
+	SDL_Window * window = SDL_CreateWindow("ProControler",
 		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 889, 618, 0);
 	//渲染层
 	SDL_Renderer * renderer = SDL_CreateRenderer(window, -1, 0);
 	//如果只是显示一张bmp图片，使用sdl内置的功能即可
 	//SDL_Surface * image = SDL_LoadBMP("only_support_BMP.bmp");
 	//因为要显示png图片，所以使用了外部库，sdl_image库当前支持jpg/png/webp/tiff图片格式
+
+	// TODO 换成相对路径？
 	SDL_Surface * image = IMG_Load("D:/99bot/switch.png");
 	//载入的图片生成SDL贴图材质
 	SDL_Texture * texture = SDL_CreateTextureFromSurface(renderer, image);
@@ -159,6 +160,7 @@ int showProController(void *opaque)
 	return 0;
 }
 
+// 端口
 CComm cComm;
 inline void send(int state) {
 	cComm.WriteByte(state);
@@ -174,10 +176,7 @@ inline void wait(int t) {
 
 int rs[15];
 int i = 0;
-//int dsl[] = {0,30,60,90,280,390};
-//int dsl[] = {0,30,60,90,290,390}; 4 m
-//int dsl[] = {0,30,60,90,295,390}; ok
-//int dsl[] = {0,30,60,90,295,355}; 4 m
+//dsl 并没有什么用，t99的延迟太大，不如一个按键一个按键的按
 int dsl[] = {0,30,60,90,296,370};
 inline void exec(Move move) {
 	i = 0;
@@ -209,7 +208,7 @@ inline void exec(Move move) {
 
 		int mTime =dsl[abs(moveY)];
 		int rTime = abs(rotate) * 58;
-		int r = mTime - rTime-29;
+		int r = mTime - rTime-58;
 
 		if (move.m.isUseHold) {
 			send(dpad_N + button_L);
@@ -228,7 +227,7 @@ inline void exec(Move move) {
 			wait(29);
 		}
 		send(direction);
-		wait(29);
+		wait(58);
 		send(dpad_U);
 		wait(29);
 		send(dpad_N);
@@ -286,10 +285,10 @@ inline void exec(Move move) {
 
 // y b a x l
 // 1 2 3 4 5
+// 0 U 
 // 2 R 
-//6 L
-//0 U 
-//4 D
+// 4 D
+// 6 L
 inline void pressA(int time = 24) {
 
 	cComm.WriteByte(8 * 9 + 3);
@@ -306,6 +305,7 @@ inline void pressA(int time = 24) {
 
 void openComm() {
 
+	// 端口号
 	cComm.OpenComm("COM8");
 	DWORD BaudRate = CBR_19200;
 	BYTE ByteSize = 8;
