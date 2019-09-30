@@ -23,7 +23,7 @@ void FrameTrack::getFilled(long * rows) {
 		cva.wait(lock);
 	}
 	m.lock();
-	//std::cout << clock() << " fill get start" << endl;
+	//std::cout << clock() << " fill get start" << endl;   
 	memcpy(rows, backRows, 20 * sizeof(long));
 	filledChanged = false;
 	//std::cout << clock() << " fill get end" << endl;
