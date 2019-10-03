@@ -41,5 +41,5 @@ public:
 	void setAllFilled(long * rows, long * grayRows);
 	void getNextPieces(Piece ** nextPieces);
 	void setNextPieces(Piece ** nextPieces);
-	int startR();
+	int start();
 };

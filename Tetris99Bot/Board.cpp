@@ -1,9 +1,8 @@
 ﻿#include "Board.h"
 
-int Board::s[] = { 0, -800, -800, -300, 6200 };
+int Board::clearScore[] = { 0, -800, -800, -300, 6200 };
 long Board::EMPTY_ROW = 0;
 long Board::FULL_ROW = 0x3FF;
- int Board::unIdentify = 0;
 Board::Board() {}
 
 inline Board::Board(long rows[20], Piece* next[6], Piece* hold, Piece *currentPiece) {
@@ -62,7 +61,7 @@ inline int Board::fill(int y, PieceShape* shape) {
 
 	int height = 2 * x + shape->h - 1;
 	//        return 34 * cleaned - height * 45;
-	return s[clean] - height * 22;
+	return clearScore[clean] - height * 22;
 }
 
 inline  bool Board::fill(int x, int y, PieceShape* shape) {
@@ -267,7 +266,7 @@ int twoWell[] = { 0, 0, 1, 10, 15, 21, 28, 28, 36, 45, 55, 66, 78, 91, 105,
 		- 34 * wellSums
 		- 34 * twoWellSums;
 	//如果左侧为空并且场上没有洞，惩罚消除1、2、3行，否则优先消除洞
-	return  Value((free0 && numberOfHoles == 0 ?s[clean]:0) - height * 22 , sumV);
+	return  Value((free0 && numberOfHoles == 0 ?clearScore[clean]:0) - height * 22 , sumV);
 }
 
 

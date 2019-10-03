@@ -7,14 +7,22 @@
 
 class Board {
 public:
-	static int s[];
+	static int clearScore[];
 	static long EMPTY_ROW;
 	static long FULL_ROW;
-	static int unIdentify;
+
+	// 地形
 	long rows[20];	
+	// 不能确定的行数
+	int unIdentify;
+	// 高度
+	int height;
+	// next列表
 	Piece* next[6];
+	// hold
 	Piece* hold;
 	Piece* currentPiece;
+
 
 	Board();
 	Board(long rows[20], Piece* next[6], Piece* hold, Piece *currentPiece);

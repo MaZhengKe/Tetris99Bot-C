@@ -156,7 +156,7 @@ int sfp_refresh_thread(void *opaque)
 
 using namespace cv;
 
-int FrameTrack::startR()
+int FrameTrack::start()
 {
 	for (int i = 0; i < 5; i++) {
 		FrameTrack::smallNextPieces[i] = Rect(1224, 216 + i * (44 + 38), 88, 44);
@@ -247,7 +247,7 @@ int FrameTrack::startR()
 	//SDL 2.0 Support for multiple windows
 	int screen_w = pCodecCtx->width;
 	int screen_h = pCodecCtx->height;
-	SDL_Window* screen = SDL_CreateWindow("NS", 100, 100, screen_w, screen_h, SDL_WINDOW_OPENGL);
+	SDL_Window* screen = SDL_CreateWindow("NS", 0, 0, screen_w, screen_h, SDL_WINDOW_OPENGL);
 	if (!screen)
 	{
 		printf("SDL: could not create window - exiting:%s\n", SDL_GetError());
