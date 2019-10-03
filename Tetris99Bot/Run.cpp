@@ -176,8 +176,8 @@ inline void wait(int t) {
 
 int rs[15];
 int i = 0;
-//dsl 并没有什么用，t99的延迟太大，不如一个按键一个按键的按
-int dsl[] = {0,30,60,90,296,370};
+//das 并没有什么用，t99的延迟太大，不如一个按键一个按键的按
+int das[] = {0,30,60,90,296,370};
 inline void exec(Move move) {
 	i = 0;
 	int rotate = 0;
@@ -206,7 +206,7 @@ inline void exec(Move move) {
 
 	if (abs(moveY) == 5) {
 
-		int mTime =dsl[abs(moveY)];
+		int mTime =das[abs(moveY)];
 		int rTime = abs(rotate) * 58;
 		int r = mTime - rTime-58;
 
@@ -306,7 +306,7 @@ inline void pressA(int time = 24) {
 void openComm() {
 
 	// 端口号
-	cComm.OpenComm("COM8");
+	cComm.OpenComm("COM12");
 	DWORD BaudRate = CBR_19200;
 	BYTE ByteSize = 8;
 	DWORD fParity = 1;
