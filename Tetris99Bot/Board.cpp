@@ -5,39 +5,29 @@ long Board::EMPTY_ROW = 0;
 long Board::FULL_ROW = 0x3FF;
 Board::Board() {}
 
-inline Board::Board(long rows[20], Piece* next[6], Piece* hold, Piece *currentPiece) {
+inline Board::Board(long rows[20], Piece* next[6], Piece* hold, Piece *current, int unIdentify, int height) {
 	memcpy(this->rows, rows, 20 * sizeof(long));
 	memcpy(this->next, next, 6 * sizeof(Piece*));
 	this->hold = hold;
-	this->currentPiece = currentPiece;
+	this->current = current;
+	this->unIdentify = unIdentify;
+	this->height = height;
+}
 
-}
 inline Board Board::copy() {
-	return  Board(rows, next, hold, currentPiece);
+	return  Board(rows, next, hold, current, unIdentify, height);
 }
+
 inline void Board::setBits(int x, long pieceRowCells) {
 	rows[x] |= pieceRowCells;
 }
 
-/**
- * Cleares part of a piece on the board.
- *
- * @param x                    board row
- * @param inversePieceRowCells filled cells of a specific piece row
- */
 inline void Board::clearBits(int x, long inversePieceRowCells) {
 	rows[x] &= inversePieceRowCells;
 }
 
-/**
- * @param x             board row
- * @param pieceRowCells filled cells of a specific piece row
- * @return true if the piece row cells are not occupied on the board
- */
 inline bool Board::isBitsFree(int x, long pieceRowCells) {
-
 	return (rows[x] & pieceRowCells) == 0;
-
 }
 
 inline void Board::fill(int x, int y) {
@@ -49,7 +39,7 @@ inline int Board::fill(int y, PieceShape* shape) {
 	if (x == 20) {
 		return x;
 	}
-	if (x - shape->h +1 < unIdentify) {
+	if (x - shape->h + 1 < unIdentify) {
 		return -99999;
 	}
 	bool isCreateHole = fill(x, y, shape);
@@ -71,7 +61,7 @@ inline  bool Board::fill(int x, int y, PieceShape* shape) {
 		Point shapePoint = shapePoints[i];
 		int xx = x - shapePoint.x;
 		int yy = y + shapePoint.y;
-		fill(xx,yy );
+		fill(xx, yy);
 	}
 	for (int i = 0; i < 4; i++) {
 		Point shapePoint = shapePoints[i];
@@ -148,19 +138,19 @@ inline int calc_01_change_count(long n_input)
 	return count;
 }
 
-inline bool isWell(long l,int y) {
+inline bool isWell(long l, int y) {
 	l = l << 1;
 	l |= 0b100000000011;
 
-	l=l >> y;
+	l = l >> y;
 	l &= 0b111;
 	return l == 0b101;
 }
-inline bool isTwoWell(long l,int y) {
+inline bool isTwoWell(long l, int y) {
 	l = l << 1;
 	l |= 0b100000000011;
 
-	l=l >> y;
+	l = l >> y;
 	l &= 0b1111;
 	return l == 0b1001;
 }
@@ -170,7 +160,7 @@ int well[] = { 0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105,
 int twoWell[] = { 0, 0, 1, 10, 15, 21, 28, 28, 36, 45, 55, 66, 78, 91, 105,
 	120, 136, 153, 171, 190, 210 };
 
- inline Value Board::value(int y, PieceShape* shape) {
+inline Value Board::value(int y, PieceShape* shape) {
 
 	int x = minX(y, shape);
 	// 超高
@@ -266,10 +256,8 @@ int twoWell[] = { 0, 0, 1, 10, 15, 21, 28, 28, 36, 45, 55, 66, 78, 91, 105,
 		- 34 * wellSums
 		- 34 * twoWellSums;
 	//如果左侧为空并且场上没有洞，惩罚消除1、2、3行，否则优先消除洞
-	return  Value((free0 && numberOfHoles == 0 ?clearScore[clean]:0) - height * 22 , sumV);
+	return  Value((free0 && numberOfHoles == 0 ? clearScore[clean] : 0) - height * 22, sumV);
 }
-
-
 
 Value Board::value(int avgV) {
 
@@ -312,14 +300,14 @@ Value Board::value(int avgV) {
 		colTransitions += calc_01_change_count(rows[x]);
 
 		for (int y = 1; y < 10; y++) {
-			if (isWell(rows[x],y)) {
+			if (isWell(rows[x], y)) {
 				cnt++;
 			}
 			else {
 				wellSums += well[cnt];
 				cnt = 0;
 			}
-			if (isTwoWell(rows[x],y)) {
+			if (isTwoWell(rows[x], y)) {
 				twoCnt++;
 			}
 			else {
@@ -344,7 +332,7 @@ Value Board::value(int avgV) {
 		//- 79 * numberOfHoles
 		- 1000 * numberOfHoles
 		- 34 * wellSums
-	    -34 * twoWellSums;
+		- 34 * twoWellSums;
 	return  Value(avgV, sumV);
 }
 
@@ -456,17 +444,10 @@ void Board::paint() {
 	}
 	s.append("\n")
 		.append("hold    : ").append(hold == NULL ? "null" : string(1, hold->character())).append("\n")
-		.append("current : ").append(currentPiece == NULL ? "null" : string(1, currentPiece->character())).append("\n");
+		.append("current : ").append(current == NULL ? "null" : string(1, current->character())).append("\n");
 	std::cout << s << endl;
 
 }
-//struct compare
-//{
-//	bool operator()(const Move& e1, const Move& e2)const {
-//		return (e2.getAllMoveValue() - e1.getAllMoveValue()) > 0;
-//
-//	}
-//};
 
 Move* Board::backGet() {
 	if (hold == NULL) {
@@ -490,7 +471,7 @@ Move* Board::get(int dep) {
 	if (hold == NULL) {
 		hold = next[0];
 		refreshNext();
-		return new Move(9-hold->pieceShapes[0]->w, 0, hold, Value(0, 0), true);
+		return new Move(9 - hold->pieceShapes[0]->w, 0, hold, Value(0, 0), true);
 	}
 
 	set<Move> *moves = new set<Move>();
@@ -523,15 +504,15 @@ Move* Board::get(int dep) {
 }
 
 inline void Board::getMoves(set<Move>* moves) {
-	getPieceMoves(moves, currentPiece);
+	getPieceMoves(moves, current);
 	getPieceMoves(moves, hold, true);
 }
 inline void Board::backgetMoves(set<Move>* moves) {
-	backgetPieceMoves(moves, currentPiece,false);
+	backgetPieceMoves(moves, current, false);
 	backgetPieceMoves(moves, hold, true);
 }
 
-inline void Board::backgetPieceMoves(set<Move> *moves, Piece* piece, bool isUseHold ) {
+inline void Board::backgetPieceMoves(set<Move> *moves, Piece* piece, bool isUseHold) {
 
 	int index = piece->rotationsEndIndex();
 	for (int i = 0; i <= index; i++) {
@@ -539,7 +520,7 @@ inline void Board::backgetPieceMoves(set<Move> *moves, Piece* piece, bool isUseH
 		int width = shape->w;
 		for (int y = 0; y <= 10 - width; y++) {
 			Board copy = this->copy();
-			 copy.fill(y, shape);
+			copy.fill(y, shape);
 			Value value = copy.value(0);
 			Move* tmp = new Move(y, i, piece, value, isUseHold);
 			moves->insert(*tmp);
@@ -555,7 +536,7 @@ inline void Board::getPieceMoves(set<Move> *moves, Piece* piece, bool isUseHold)
 		for (int y = 0; y <= 10 - width; y++) {
 
 			Board copy = this->copy();
-			Value value = copy.value(y,shape);
+			Value value = copy.value(y, shape);
 			if (value.avgV == -99999) {
 				continue;
 			}
@@ -567,8 +548,8 @@ inline void Board::getPieceMoves(set<Move> *moves, Piece* piece, bool isUseHold)
 
 inline void Board::useMove(Move move) {
 	if (move.m.isUseHold)
-		hold = currentPiece;
-	currentPiece = next[0];
+		hold = current;
+	current = next[0];
 	refreshNext();
 	fill(move);
 }

@@ -12,20 +12,26 @@ public:
 	static long FULL_ROW;
 
 	// 地形
-	long rows[20];	
+	long rows[20];
+
 	// 不能确定的行数
 	int unIdentify;
+
 	// 高度
 	int height;
+
 	// next列表
 	Piece* next[6];
+
 	// hold
 	Piece* hold;
-	Piece* currentPiece;
+
+	// 当前方块
+	Piece* current;
 
 
 	Board();
-	Board(long rows[20], Piece* next[6], Piece* hold, Piece *currentPiece);
+	Board(long rows[20], Piece* next[6], Piece* hold, Piece *current, int unIdentify, int height);
 	Board copy();
 	void setBits(int x, long pieceRowCells);
 	void clearBits(int x, long inversePieceRowCells);

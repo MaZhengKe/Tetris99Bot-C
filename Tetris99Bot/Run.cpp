@@ -24,7 +24,7 @@ static bool ready(Piece** nextPieces) {
 	}
 	return true;
 }
-FrameTrack frameTracker= FrameTrack();
+FrameTrack frameTracker = FrameTrack();
 inline bool notEqual(Piece** expected, Piece** now, int num)
 {
 	for (int i = 0; i < num; i++) {
@@ -168,7 +168,7 @@ inline void wait(int t) {
 int rs[15];
 int i = 0;
 //das 并没有什么用，t99的延迟太大，不如一个按键一个按键的按
-int das[] = {0,30,60,90,296,370};
+int das[] = { 0,30,60,90,296,370 };
 inline void exec(Move move) {
 	i = 0;
 	int rotate = 0;
@@ -197,9 +197,9 @@ inline void exec(Move move) {
 
 	if (abs(moveY) == 5) {
 
-		int mTime =das[abs(moveY)];
+		int mTime = das[abs(moveY)];
 		int rTime = abs(rotate) * 58;
-		int r = mTime - rTime-58;
+		int r = mTime - rTime - 58;
 
 		if (move.m.isUseHold) {
 			send(dpad_N + button_L);
@@ -208,7 +208,7 @@ inline void exec(Move move) {
 			wait(35);
 		}
 		int direction = moveY > 0 ? dpad_R : dpad_L;
-		int rotateDirc =  rotate > 0 ? button_A : button_X;
+		int rotateDirc = rotate > 0 ? button_A : button_X;
 		send(direction);
 		wait(r);
 		for (int i = 0; i < abs(rotate); i++) {
@@ -307,7 +307,7 @@ void openComm() {
 
 }
 
-inline bool allGarbage(long rows[20],int unIdentify) {
+inline bool allGarbage(long rows[20], int unIdentify) {
 
 	for (int x = unIdentify - 1; x >= 0; x--) {
 		if (!isGarbage(rows[x])) {
@@ -344,7 +344,7 @@ void run() {
 	//依据现有的行动预测下一步的画面
 	Board nextBoard;
 	frameTracker.getNextPieces(nextBoard.next);
-	nextBoard.currentPiece = nextBoard.next[0];
+	nextBoard.current = nextBoard.next[0];
 	nextBoard.refreshNext();
 
 	seconds = time(NULL);
@@ -364,7 +364,7 @@ void run() {
 				nextPieceNum++;
 			}
 		}
-		if(nextPieceNum == 0 || (cannotOnlyOne && nextPieceNum == 1)){
+		if (nextPieceNum == 0 || (cannotOnlyOne && nextPieceNum == 1)) {
 			//std::cout << clock() << " get " << nextPieceNum <<" piece,继续获取" << endl;
 			continue;
 		}
@@ -390,7 +390,7 @@ void run() {
 		if (r == -1)
 			return;
 		board.hold = nextBoard.hold;
-		board.currentPiece = nextBoard.currentPiece;
+		board.current = nextBoard.current;
 		std::cout << clock() << " 图像获取完成" << endl;
 		Move* move = board.get(nextPieceNum);
 		//std::cout << move->m.piece->character() << " "
@@ -408,7 +408,7 @@ void run() {
 					return;
 				std::cout << clock() << " 重新计算未确定的行" << endl;
 				frameTracker.getGrayFilled(gray);
-			} while (!allGarbage(gray,board.unIdentify));
+			} while (!allGarbage(gray, board.unIdentify));
 
 			for (int x = 0; x < board.unIdentify; x++) {
 				board.rows[x] = gray[x];
@@ -488,7 +488,7 @@ inline int correction(Board &board, Board &expected) {
 	int maxSim = -1;
 	if (expected.height > 0) {
 
-		cout << clock() << " 当前高度：" << expected. height << endl;
+		cout << clock() << " 当前高度：" << expected.height << endl;
 		for (int x = 0; x < 20 - expected.height; x++) {
 			int match = 0;
 			for (int xx = 0; xx < expected.height; xx++) {
@@ -526,7 +526,7 @@ inline int correction(Board &board, Board &expected) {
 			else {
 				board.unIdentify = startX;
 			}
-			cout << clock() << " 未确定的行数 " <<board.unIdentify << endl;
+			cout << clock() << " 未确定的行数 " << board.unIdentify << endl;
 
 		}
 		else
