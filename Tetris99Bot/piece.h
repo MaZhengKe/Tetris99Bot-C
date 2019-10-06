@@ -21,18 +21,19 @@ extern "C"
 class Piece
 {
 public:
+
+	cv::Mat mat;
+	cv::Mat bigMat;
+	int rEndIndex;
+	long shape[4][20][10][20];
+	long canStop[4][20][10][20];
+	PieceShape** pieceShapes;
+
 	virtual int number() = 0;
 	virtual PieceShape** shapes() = 0;
 	virtual char character();
 	virtual int rotationsEndIndex() =0;
-	cv::Mat mat;
-	cv::Mat bigMat;
-	PieceShape** pieceShapes;
 
-	static  int ROTATION_MODULUS[];
-
-	cv::Mat getMat();
-	cv::Mat getBigMat();
 	int hashCode();
 	void init();
 };

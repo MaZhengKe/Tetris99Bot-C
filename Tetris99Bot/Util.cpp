@@ -59,7 +59,7 @@ Piece* Util::bigMat2Piece(Mat mat) {
 	Piece * candidate = NULL;
 	int max = 300;
 	for (Piece * piece : pieces) {
-		int similarity = matSim(mat, piece->getBigMat(), 13, 26);
+		int similarity = matSim(mat, piece->bigMat, 13, 26);
 		//log.info("{} {}",piece,similarity);
 		if (similarity > max) {
 			max = similarity;
@@ -73,7 +73,7 @@ Piece* Util::mat2Piece(Mat mat) {
 	Piece *candidate = NULL;
 	int max = 200;
 	for (Piece *piece : pieces) {
-		Mat mat1 = piece->getMat();
+		Mat mat1 = piece->mat;
 		int similarity = matSim(mat, mat1, 11, 22);
 		//log.info("{} {}",piece,similarity);
 		if (similarity > max) {

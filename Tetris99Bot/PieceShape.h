@@ -9,9 +9,8 @@ public:
 	int w;
 	int h;
 
-	PieceShape(int y, Point* points);
 	PieceShape();
-	Point* getPoints();
+	PieceShape(int y, Point* points);
 	PieceShape(int w, int h, int y, int rotateIndex, Point* points);
 	PieceShape(int y, Point point1, Point point2, Point point3, Point point4);
 	PieceShape(int w, int h, int y, int rotateIndex, Point point1, Point point2, Point point3, Point point4);

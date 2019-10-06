@@ -29,6 +29,11 @@ public:
 	// 当前方块
 	Piece* current;
 
+	int cX;
+	int cY;
+	int cZ;
+
+
 
 	Board();
 	Board(long rows[20], Piece* next[6], Piece* hold, Piece *current, int unIdentify, int height);
@@ -36,13 +41,11 @@ public:
 	void setBits(int x, long pieceRowCells);
 	void clearBits(int x, long inversePieceRowCells);
 	bool isBitsFree(int x, long pieceRowCells);
-	void fill(int x, int y);
-	int fill(int y, PieceShape* shape);
-	bool fill(int x, int y, PieceShape* shape);
-	int minX(int y, PieceShape* shape);
+	bool fill(int r, int x, int y, Piece* piece);
+	int minX(int y, int r, Piece* piece);
 	int clearRows(int x, int pieceHeight);
-	Value value(int avgV);
-	Value value(int y, PieceShape* shape);
+	Move value(int y, int r, Piece* piece);
+	Move backValue(int y, int r, Piece* piece);
 	bool isFilled(int x, int y);
 	bool isFree(int x, int y);
 	void paintAll(Move move);

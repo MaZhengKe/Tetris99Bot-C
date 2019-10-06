@@ -434,6 +434,19 @@ void run() {
 
 	}
 }
+
+int mainn(int argc, char* argv[]) {
+	Board b = Board();
+
+	b.current = new PieceL();
+	b.hold = new PieceS();
+
+	Move* m = b.get(0);
+
+	return 0;
+
+
+}
 int main(int argc, char* argv[]) {
 	av_log_set_level(AV_LOG_PANIC);
 	Util::init();

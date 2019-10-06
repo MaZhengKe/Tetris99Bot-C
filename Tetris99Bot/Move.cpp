@@ -1,8 +1,9 @@
 #include "Move.h"
-M::M(Piece* piece, int y, int rotateIndex, bool isUseHold) {
+M::M(Piece* piece, int r, int x,int y, bool isUseHold) {
 	this->piece = piece;
+	this->rotateIndex = r;
+	this->x = x;
 	this->y = y;
-	this->rotateIndex = rotateIndex;
 	this->isUseHold = isUseHold;
 }
 M::M() {}
@@ -10,13 +11,13 @@ M::M() {}
 Move::Move() {
 }
 
-Move::Move(int y, int rotateIndex, Piece* piece, Value value, bool isUseHold) {
-	this->m = M(piece, y, rotateIndex, isUseHold);
+Move::Move(int r, int x , int y, Piece* piece, Value value, bool isUseHold) {
+	this->m = M(piece, r,x,y, isUseHold);
 	this->value = value;
 }
 
-Move::Move(int y, int rotateIndex, Piece *piece, Value value) {
-	this->m = M(piece, y, rotateIndex, false);
+Move::Move(int r, int x, int y ,Piece *piece, Value value) {
+	this->m = M(piece, r, x, y, false);
 	this->value = value;
 }
 

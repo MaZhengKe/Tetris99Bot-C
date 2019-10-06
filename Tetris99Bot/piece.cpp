@@ -1,21 +1,35 @@
 #include "piece.h"
 
-int Piece::ROTATION_MODULUS[] = { 0, 1, 0, 3 };
-
-
-cv::Mat Piece::getMat() {
-	return mat;
-}
-
-cv::Mat Piece::getBigMat() {
-	return bigMat;
-}
-
-
 void Piece::init() {
 	mat = cv::imread(Const::PATH + "/small/" + character() + ".png");
 	bigMat = cv::imread(Const::PATH + "/big/" + character() + ".png");
 	pieceShapes = shapes();
+	rEndIndex = rotationsEndIndex();
+
+	for (int r = 0; r <= rEndIndex; r++) {
+		PieceShape* pieceShape = pieceShapes[r];
+		for (int x = 0; x < 20; x++)
+			for (int y = 0; y <= 10 - pieceShape->w; y++)
+			{
+				long* rows = shape[r][x][y];
+				long* canS = canStop[r][x][y];
+				Point *shapePoints = pieceShape->points;
+				bool isCreateHole = false;
+				for (int i = 0; i < 4; i++) {
+					Point shapePoint = shapePoints[i];
+					int xx = x - shapePoint.x;
+					int yy = y + shapePoint.y;
+					if(xx>=0)
+						rows[xx] |= 1 << yy;
+					if (xx > 0) {
+						canS[xx-1] |= 1 << yy;
+					}
+
+					rows[xx] &= 0x3ff;
+				}
+			}
+
+	}
 }
 
 int Piece::hashCode() {
