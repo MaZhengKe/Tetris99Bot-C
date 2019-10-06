@@ -153,10 +153,8 @@ inline Move Board::value(int y, int r, Piece* piece) {
 	if (isCreateHole && clean == 0) {
 		return   Move(r, x, y, piece, Value(-99999, -99999));
 	}
-	//平均高度
-	int height = 2 * x + shape->h - 1;
-	//        return 34 * cleaned - height * 45;
 
+	int height = 2 * x + shape->h - 1;
 	int rowTransitions = 0;
 	int colTransitions = 0;
 	int numberOfHoles = 0;
@@ -251,30 +249,30 @@ inline Move Board::backValue(int y, int r, Piece* piece) {
 	bool isCreateHole = fill(r, x, y, piece);
 
 	int clean = clearRows(x, shape->h);
-	//平均高度
 	int height = 2 * x + shape->h - 1;
-	//        return 34 * cleaned - height * 45;
-
 	int rowTransitions = 0;
 	int colTransitions = 0;
 	int numberOfHoles = 0;
 	int wellSums = 0;
 	int twoWellSums = 0;
+	bool free0 = true;
+
 	for (int y = 0; y < 10; y++) {
 		bool now = true;
-		for (int x = 0; x < 20; x++) {
-			if (isFilled(x, y) != now) {
-				now = isFilled(x, y);
-				rowTransitions++;
-			}
-		}
-		if (!now)
-			rowTransitions++;
-
 		bool f = false;
 		int block = 0;
+
 		for (int x = 19; x >= 0; x--) {
-			if (isFilled(x, y)) {
+			bool isFill = isFilled(x, y);
+			if (isFill != now) {
+				now = isFill;
+				rowTransitions++;
+			}
+			if (isFill) {
+
+				if (y == 0) {
+					free0 = false;
+				}
 				f = true;
 				block++;
 			}
@@ -284,35 +282,32 @@ inline Move Board::backValue(int y, int r, Piece* piece) {
 				block = 0;
 			}
 		}
+		if (!now)
+			rowTransitions++;
 	}
 
-
-	bool free0 = true;
 	int cnt = 0;
 	int twoCnt = 0;
 	for (int x = 0; x < 20; x++) {
 		colTransitions += calc_01_change_count(rows[x]);
-
+		uint16_t l = rows[x] << 1;
+		l |= 0b100000000011;
 		for (int y = 1; y < 10; y++) {
-			if (isWell(rows[x], y)) {
+			uint16_t t = l >> y;
+			if ((t & 0b111) == 0b101) {
 				cnt++;
 			}
 			else {
 				wellSums += well[cnt];
 				cnt = 0;
+				if ((t & 0b1111) == 0b1001) {
+					twoCnt++;
+				}
+				else {
+					twoWellSums += twoWell[twoCnt];
+					twoCnt = 0;
+				}
 			}
-			if (isTwoWell(rows[x], y)) {
-				twoCnt++;
-			}
-			else {
-				twoWellSums += twoWell[twoCnt];
-				twoCnt = 0;
-			}
-
-
-		}
-		if (isFilled(x, 0)) {
-			free0 = false;
 		}
 	}
 
@@ -528,18 +523,17 @@ inline void Board::getPieceMoves(set<Move> *moves, Piece* piece, bool isUseHold)
 	for (int r = 0; r <= index; r++) {
 		PieceShape* shape = piece->pieceShapes[r];
 		int width = shape->w;
-		for (int x = 0; x < 20; x++)
-			for (int y = 0; y <= 10 - width; y++) {
+		for (int y = 0; y <= 10 - width; y++) {
 
 
-				Board copy = this->copy();
-				Move move = copy.value(y, r, piece);
-				if (move.value.avgV == -99999) {
-					continue;
-				}
-				move.m.isUseHold = isUseHold;
-				moves->insert(move);
+			Board copy = this->copy();
+			Move move = copy.value(y, r, piece);
+			if (move.value.avgV == -99999) {
+				continue;
 			}
+			move.m.isUseHold = isUseHold;
+			moves->insert(move);
+		}
 	}
 }
 
