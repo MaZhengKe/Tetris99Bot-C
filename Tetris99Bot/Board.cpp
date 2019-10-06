@@ -1,12 +1,12 @@
 ﻿#include "Board.h"
 
 int Board::clearScore[] = { 0, -800, -800, -300, 6200 };
-long Board::EMPTY_ROW = 0;
-long Board::FULL_ROW = 0x3FF;
+uint16_t Board::EMPTY_ROW = 0;
+uint16_t Board::FULL_ROW = 0x3FF;
 Board::Board() {}
 
-inline Board::Board(long rows[20], Piece* next[6], Piece* hold, Piece *current, int unIdentify, int height) {
-	memcpy(this->rows, rows, 20 * sizeof(long));
+inline Board::Board(uint16_t rows[20], Piece* next[6], Piece* hold, Piece *current, int unIdentify, int height) {
+	memcpy(this->rows, rows, 20 * sizeof(uint16_t));
 	memcpy(this->next, next, 6 * sizeof(Piece*));
 	this->hold = hold;
 	this->current = current;
@@ -18,15 +18,15 @@ inline Board Board::copy() {
 	return  Board(rows, next, hold, current, unIdentify, height);
 }
 
-inline void Board::setBits(int x, long pieceRowCells) {
+inline void Board::setBits(int x, uint16_t pieceRowCells) {
 	rows[x] |= pieceRowCells;
 }
 
-inline void Board::clearBits(int x, long inversePieceRowCells) {
+inline void Board::clearBits(int x, uint16_t inversePieceRowCells) {
 	rows[x] &= inversePieceRowCells;
 }
 
-inline bool Board::isBitsFree(int x, long pieceRowCells) {
+inline bool Board::isBitsFree(int x, uint16_t pieceRowCells) {
 	return (rows[x] & pieceRowCells) == 0;
 }
 
@@ -36,9 +36,9 @@ inline  bool Board::fill(int r, int x, int y, Piece* piece) {
 		rows[xx] |= piece->shape[r][x][y][xx];
 	}
 
-	long *canS = piece->canStop[r][x][y];
+	uint16_t *canS = piece->canStop[r][x][y];
 	for (int xx = x - h; xx < x && xx >=0; xx++) {
-		if (rows[xx] & canS[xx] != canS[xx]) {
+		if ((rows[xx] & canS[xx] )!= canS[xx]) {
 			return true;
 		}
 	}
@@ -48,7 +48,7 @@ inline  bool Board::fill(int r, int x, int y, Piece* piece) {
 inline int Board::minX(int y, int r, Piece* piece) {
 	int h = piece->pieceShapes[r]->h;
 	for (int x = 19; x >= h; x--) {
-		long *canS = piece->canStop[r][x][y];
+		uint16_t *canS = piece->canStop[r][x][y];
 		for (int xx = x-h; xx < x; xx++) {
 				if ((rows[xx] & canS[xx]) != 0) {
 					return x;
@@ -93,15 +93,15 @@ inline int Board::clearRows(int x, int pieceHeight) {
 }
 
 
-inline int calc_01_change_count(long n_input)
+inline int calc_01_change_count(uint16_t n_input)
 {
 	n_input = n_input << 1;
 	n_input |= 0b100000000011;
 
-	long tmp = (n_input << 1);
-	long n = n_input ^ tmp;//check how many bits are different
-	long start = (n >> (12)), end = (n & 0x01);//check the first and the last bit
-	long count = 0;//num of 1->0 or 0->1
+	uint16_t tmp = (n_input << 1);
+	uint16_t n = n_input ^ tmp;//check how many bits are different
+	uint16_t start = (n >> (12)), end = (n & 0x01);//check the first and the last bit
+	uint16_t count = 0;//num of 1->0 or 0->1
 
 	for (count = 0; n; ++count)
 	{
@@ -111,7 +111,7 @@ inline int calc_01_change_count(long n_input)
 	return count;
 }
 
-inline bool isWell(long l, int y) {
+inline bool isWell(uint16_t l, int y) {
 	l = l << 1;
 	l |= 0b100000000011;
 
@@ -119,7 +119,7 @@ inline bool isWell(long l, int y) {
 	l &= 0b111;
 	return l == 0b101;
 }
-inline bool isTwoWell(long l, int y) {
+inline bool isTwoWell(uint16_t l, int y) {
 	l = l << 1;
 	l |= 0b100000000011;
 
@@ -528,7 +528,9 @@ inline void Board::getPieceMoves(set<Move> *moves, Piece* piece, bool isUseHold)
 	for (int r = 0; r <= index; r++) {
 		PieceShape* shape = piece->pieceShapes[r];
 		int width = shape->w;
+		for(int x = 0;x<20;x++)
 		for (int y = 0; y <= 10 - width; y++) {
+
 
 			Board copy = this->copy();
 			Move move = copy.value(y, r,piece);

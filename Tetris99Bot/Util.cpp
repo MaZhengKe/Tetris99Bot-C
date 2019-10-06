@@ -132,7 +132,7 @@ bool  Util::isIncludeMat(Mat mat) {
 	return false;
 }
 
-void Util::getFilled(long * rows, Mat mat, bool onlyUseGray) {
+void Util::getFilled(uint16_t * rows, Mat mat, bool onlyUseGray) {
 	if (onlyUseGray) {
 		for (int x = 0; x < 20; x++) {
 			rows[x] = 0;
@@ -155,7 +155,7 @@ void Util::getFilled(long * rows, Mat mat, bool onlyUseGray) {
 		}
 	}
 }
-void Util::getFilled(long * rows, Mat mat, long * grayRows) {
+void Util::getFilled(uint16_t * rows, Mat mat, uint16_t * grayRows) {
 	for (int x = 0; x < 20; x++) {
 		rows[x] = 0;
 		grayRows[x] = 0;

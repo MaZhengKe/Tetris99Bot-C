@@ -11,8 +11,8 @@ void Piece::init() {
 		for (int x = 0; x < 20; x++)
 			for (int y = 0; y <= 10 - pieceShape->w; y++)
 			{
-				long* rows = shape[r][x][y];
-				long* canS = canStop[r][x][y];
+				uint16_t* rows = shape[r][x][y];
+				uint16_t* canS = canStop[r][x][y];
 				Point *shapePoints = pieceShape->points;
 				bool isCreateHole = false;
 				for (int i = 0; i < 4; i++) {

@@ -9,11 +9,11 @@
 
 int main(int argc, char * argv[]);
 
-int getHeight(long* filled);
-int andNum(long n);
-bool isGarbage(long row);
+int getHeight(uint16_t* filled);
+int andNum(uint16_t n);
+bool isGarbage(uint16_t row);
 int correction(Board& board, Board& expected);
-void filling(long board[20], long expected[20], int startX, int expectedHight);
+void filling(uint16_t board[20], uint16_t expected[20], int startX, int expectedHight);
 bool ready(Piece** nextPieces);
 bool notEqual(Piece** expected, Piece** now, int num);
 
@@ -307,7 +307,7 @@ void openComm() {
 
 }
 
-inline bool allGarbage(long rows[20], int unIdentify) {
+inline bool allGarbage(uint16_t rows[20], int unIdentify) {
 
 	for (int x = unIdentify - 1; x >= 0; x--) {
 		if (!isGarbage(rows[x])) {
@@ -331,7 +331,7 @@ void run() {
 	secondsStart = time(NULL);
 
 	while (true) {
-		if (time(NULL) - secondsStart > 80)
+		if (time(NULL) - secondsStart > 120)
 			return;
 		frameTracker.getNextPieces(nextPieces);
 		if (ready(nextPieces))
@@ -392,6 +392,14 @@ void run() {
 		board.hold = nextBoard.hold;
 		board.current = nextBoard.current;
 		std::cout << clock() << " 图像获取完成" << endl;
+
+
+
+		board.cX = 19 - 6*FrameTrack::speed;
+		board.cY = board.current->pieceShapes[0]->y;
+		board.cZ = 0;
+
+
 		Move* move = board.get(nextPieceNum);
 		//std::cout << move->m.piece->character() << " "
 			//<< move->m.rotateIndex << " " << move->m.y << endl;
@@ -401,7 +409,7 @@ void run() {
 
 		if (board.unIdentify > 0) {
 
-			long gray[20];
+			uint16_t gray[20];
 			do {
 
 				if (time(NULL) - seconds > 10)
@@ -462,7 +470,7 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
-inline int getHeight(long* filled) {
+inline int getHeight(uint16_t* filled) {
 	int h = -1;
 	for (int x = 19; x >= 0; x--) {
 		if (filled[x] != Board::EMPTY_ROW) {
@@ -473,7 +481,7 @@ inline int getHeight(long* filled) {
 
 	return h + 1;
 }
-inline int andNum(long n) {
+inline int andNum(uint16_t n) {
 	int count = 0;
 	while (n != 0) {
 		n = (n - 1) & n;
@@ -481,12 +489,12 @@ inline int andNum(long n) {
 	}
 	return count;
 }
-inline bool isGarbage(long row) {
+inline bool isGarbage(uint16_t row) {
 	return andNum(row) == 9;
 }
 
 
-inline bool hasBlock(long rows[10], int y) {
+inline bool hasBlock(uint16_t rows[10], int y) {
 	for (int x = 0; x < 20; x++) {
 		if (rows[x] && 1 << y != 0)
 			return true;
@@ -501,7 +509,7 @@ inline int correction(Board &board, Board &expected) {
 	int maxSim = -1;
 	if (expected.height > 0) {
 
-		cout << clock() << " 当前高度：" << expected.height << endl;
+		//cout << clock() << " 当前高度：" << expected.height << endl;
 		for (int x = 0; x < 20 - expected.height; x++) {
 			int match = 0;
 			for (int xx = 0; xx < expected.height; xx++) {
@@ -518,7 +526,7 @@ inline int correction(Board &board, Board &expected) {
 	if (startX > 0) {
 		cout << clock() << " 高度上升：" << startX << endl;
 
-		long gray[20];
+		uint16_t gray[20];
 		frameTracker.getGrayFilled(gray);
 
 		board.unIdentify = 0;
@@ -562,7 +570,8 @@ inline int correction(Board &board, Board &expected) {
 	filling(board.rows, expected.rows, startX, expected.height);
 	return 0;
 }
-inline void filling(long board[20], long expected[20], int startX, int expectedHight) {
+
+inline void filling(uint16_t board[20], uint16_t expected[20], int startX, int expectedHight) {
 	for (int x = startX; x < 20; x++) {
 		if (x - startX < expectedHight)
 			board[x] = expected[x - startX];

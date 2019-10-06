@@ -27,7 +27,6 @@ public:
 	~Util();
 	static void init();
 	static cv::Rect pieceRects[20][10];
-	static Piece* bigMat2Piece();
 	static Piece* bigMat2Piece(cv::Mat mat);
 	static Piece* mat2Piece(cv::Mat mat);
 	static cv::Mat toHSV(cv::Mat img);
@@ -35,6 +34,6 @@ public:
 	static const Block gray;
 	static double similarity(cv::Mat mat, Block block);
 	static bool isIncludeMat(cv::Mat mat);
-	static void getFilled(long * rows, cv::Mat mat, bool onlyUseGray);
-	static void getFilled(long * rows, cv::Mat mat, long * grayRows);
+	static void getFilled(uint16_t * rows, cv::Mat mat, bool onlyUseGray);
+	static void getFilled(uint16_t * rows, cv::Mat mat, uint16_t * grayRows);
 };

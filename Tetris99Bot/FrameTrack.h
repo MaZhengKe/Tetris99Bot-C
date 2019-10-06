@@ -31,14 +31,15 @@ public:
 	static  cv::Rect boardRect;
 	static  cv::Rect bigNextPiece;
 	static  cv::Rect smallNextPieces[5];
+	static int speed;
 	AVFormatContext *pFormatCtx;
 	cv::Mat mat;
 	bool nextChanged = false;
 	bool filledChanged = false;
 	bool grayRowsChanged = false;
-	void getFilled(long * rows);
-	void getGrayFilled(long * rows);
-	void setAllFilled(long * rows, long * grayRows);
+	void getFilled(uint16_t * rows);
+	void getGrayFilled(uint16_t * rows);
+	void setAllFilled(uint16_t * rows, uint16_t * grayRows);
 	void getNextPieces(Piece ** nextPieces);
 	void setNextPieces(Piece ** nextPieces);
 	int start();

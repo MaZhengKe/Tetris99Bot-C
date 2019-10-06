@@ -13,36 +13,37 @@ cv::Rect FrameTrack::smallNextPieces[5] = {};
 mutex m;
 condition_variable cva;
 
-long backRows[20];
-long backGrayRows[20];
+uint16_t backRows[20];
+uint16_t backGrayRows[20];
 Piece * backNext[6];
+int FrameTrack::speed = 0;
 
-void FrameTrack::getFilled(long * rows) {
+void FrameTrack::getFilled(uint16_t * rows) {
 	if (!filledChanged) {
 		unique_lock<mutex> lock(m);
 		cva.wait(lock);
 	}
 	m.lock();
 	//std::cout << clock() << " fill get start" << endl;   
-	memcpy(rows, backRows, 20 * sizeof(long));
+	memcpy(rows, backRows, 20 * sizeof(uint16_t));
 	filledChanged = false;
 	//std::cout << clock() << " fill get end" << endl;
 	m.unlock();
 }
-void FrameTrack::getGrayFilled(long * rows) {
+void FrameTrack::getGrayFilled(uint16_t * rows) {
 	if (!grayRowsChanged) {
 		unique_lock<mutex> lock(m);
 		cva.wait(lock);
 	}
 	m.lock();
 	//std::cout << clock() << " fill get start" << endl;
-	memcpy(rows, backGrayRows, 20 * sizeof(long));
+	memcpy(rows, backGrayRows, 20 * sizeof(uint16_t));
 	grayRowsChanged = false;
 	//std::cout << clock() << " fill get end" << endl;
 	m.unlock();
 }
 
-void FrameTrack::setAllFilled(long * rows, long * grayRows) {
+void FrameTrack::setAllFilled(uint16_t * rows, uint16_t * grayRows) {
 	Mat img(this->mat, boardRect);
 	Mat mat = Util::toHSV(img);
 
@@ -130,29 +131,6 @@ static void decode(AVCodecContext *dec_ctx, AVPacket *pkt, AVFrame *pFrame, AVFr
 int thread_exit = 0;
 int thread_pause = 0;
 
-int sfp_refresh_thread(void *opaque)
-{
-	thread_exit = 0;
-	thread_pause = 0;
-
-	while (!thread_exit)
-	{
-		if (!thread_pause)
-		{
-			SDL_Event event;
-			event.type = SFM_REFRESH_EVENT;
-			SDL_PushEvent(&event);
-		}
-		SDL_Delay(1);
-	}
-	thread_exit = 0;
-	thread_pause = 0;
-	//Break
-	SDL_Event event;
-	event.type = SFM_BREAK_EVENT;
-	SDL_PushEvent(&event);
-	return 0;
-}
 
 using namespace cv;
 
@@ -181,8 +159,8 @@ int FrameTrack::start()
 	}
 
 	// 打开视频获取视频流，设置视频默认索引值
-	int videoindex = -1;
-	for (int i = 0; i < pFormatCtx->nb_streams; i++)
+	unsigned int videoindex = -1;
+	for (unsigned int i = 0; i < pFormatCtx->nb_streams; i++)
 	{
 		if (pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
 		{
@@ -268,9 +246,6 @@ int FrameTrack::start()
 	sdlRect.h = screen_h;
 
 	AVPacket *packet = (AVPacket *)av_malloc(sizeof(AVPacket));
-
-	SDL_Thread *video_tid = SDL_CreateThread(sfp_refresh_thread, "Camera Thread", NULL);
-
 	AVFrame *pFrame = av_frame_alloc();
 	AVFrame *frameBGR = av_frame_alloc();
 
@@ -279,8 +254,6 @@ int FrameTrack::start()
 	av_image_fill_arrays(pFrame->data, frameBGR->linesize, out_buffer, AV_PIX_FMT_BGR24, pCodecCtx->width, pCodecCtx->height, 1);
 	this->mat = Mat(pCodecCtx->height, pCodecCtx->width, CV_8UC3, frameBGR->data[0], frameBGR->linesize[0]);
 
-	//Event Loop
-	SDL_Event event;
 	for (;;)
 	{
 		//不响应任何事件，包括移动窗口等，以加速帧的获取
@@ -306,10 +279,9 @@ int FrameTrack::start()
 		SDL_RenderCopy(sdlRenderer, sdlTexture, NULL, NULL);
 		SDL_RenderPresent(sdlRenderer);
 		//SDL End-----------------------
-		//std::cout << clock() << " sdl end" << endl;
 
 		av_packet_unref(packet);
-
+		//std::cout << clock() << " sdl end" << endl;
 	}
 	SDL_Quit();
 	av_frame_free(&pFrame);

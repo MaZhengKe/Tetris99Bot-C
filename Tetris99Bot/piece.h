@@ -25,8 +25,8 @@ public:
 	cv::Mat mat;
 	cv::Mat bigMat;
 	int rEndIndex;
-	long shape[4][20][10][20];
-	long canStop[4][20][10][20];
+	uint16_t shape[4][20][10][20];
+	uint16_t canStop[4][20][10][20];
 	PieceShape** pieceShapes;
 
 	virtual int number() = 0;
