@@ -1,8 +1,5 @@
 #include "Comm.h"
 
-
-#include "Comm.h"
-
 /*默认构造函数*/
 CComm::CComm()
 {
